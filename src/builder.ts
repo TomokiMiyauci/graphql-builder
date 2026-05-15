@@ -6,6 +6,7 @@ import type {
   ObjectRef,
   ObjectType,
   ObjectTypeConfig,
+  OutputConfig,
   Ref,
   ScalarType,
   UnionType,
@@ -40,8 +41,6 @@ export class SchemaBuilder {
 
     return type;
   }
-
-  list() {}
 
   ref(name: string): Ref {
     const registry = this.#registry;
@@ -92,5 +91,9 @@ export class SchemaBuilder {
     const type = new InterfaceTypeBuilder(config);
 
     return type;
+  }
+
+  types(): OutputConfig<any, any>[] {
+    return this.#registry.values().toArray();
   }
 }

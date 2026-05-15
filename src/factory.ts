@@ -15,7 +15,6 @@ import {
   GraphQLFieldConfig,
   GraphQLInterfaceType,
   GraphQLObjectType,
-  GraphQLOutputType,
   GraphQLScalarType,
   GraphQLScalarTypeConfig,
   GraphQLUnionType,
@@ -69,7 +68,7 @@ export class UnionTypeBuilder<T, U> implements UnionType {
   type = "union" as const;
 
   @memo
-  get definition(): GraphQLOutputType {
+  get definition() {
     const config = toUnionTypeConfig(this.config);
     const type = new GraphQLUnionType(config);
 

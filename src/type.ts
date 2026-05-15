@@ -1,7 +1,7 @@
 import {
   type GraphQLFieldResolver,
+  GraphQLNamedOutputType,
   GraphQLObjectType,
-  type GraphQLOutputType,
   GraphQLScalarType,
 } from "graphql";
 
@@ -29,7 +29,7 @@ export interface ScalarType extends Builder {
 
 interface Builder {
   type: string;
-  get definition(): GraphQLOutputType;
+  get definition(): GraphQLNamedOutputType;
 }
 
 export interface ObjectTypeConfig<TSource, TContext> {
