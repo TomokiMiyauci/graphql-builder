@@ -1,0 +1,23 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@std/collections@^1.1.7": "1.1.7",
+    "npm:graphql@^16.14.0": "16.14.0"
+  },
+  "jsr": {
+    "@std/collections@1.1.7": {
+      "integrity": "56f659d011218a69740b12829cf5ea2c9b70bbed0af02597e27dc1eb5e69e208"
+    }
+  },
+  "npm": {
+    "graphql@16.14.0": {
+      "integrity": "sha512-BBvQ/406p+4CZbTpCbVPSxfzrZrbnuWSP1ELYgyS6B+hNeKzgrdB4JczCa5VZUBQrDa9hUngm0KnexY6pJRN5Q=="
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@std/collections@^1.1.7",
+      "npm:graphql@^16.14.0"
+    ]
+  }
+}
