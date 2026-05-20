@@ -8,6 +8,7 @@ import type {
   ObjectTypeConfig,
   OutputConfig,
   Ref,
+  Registry,
   ScalarType,
   UnionType,
   UnionTypeConfig,
@@ -15,14 +16,15 @@ import type {
 import {
   EnumTypeBuilder,
   InterfaceTypeBuilder,
+  ObjectRefBuilder,
   ObjectTypeBuilder,
+  RefBuilder,
   ScalarTypeBuilder,
   UnionTypeBuilder,
 } from "./factory.ts";
 
 export class SchemaBuilder {
-  #registry: Map<string, ScalarType | ObjectType<any, any> | EnumType> =
-    new Map();
+  #registry: Registry = new Map();
 
   scalar<Y, Z>(config: GraphQLScalarTypeConfig<Y, Z>): ScalarType {
     const scalar = new ScalarTypeBuilder(config);
@@ -45,32 +47,16 @@ export class SchemaBuilder {
   ref(name: string): Ref {
     const registry = this.#registry;
 
-    return {
-      type: "ref",
-      get definition() {
-        const result = registry.get(name);
+    const builder = new RefBuilder(registry, name);
 
-        if (!result) throw new Error();
-
-        return result.definition;
-      },
-    };
+    return builder;
   }
 
   objectRef(name: string): ObjectRef<unknown, unknown> {
     const registry = this.#registry;
+    const builder = new ObjectRefBuilder(registry, name);
 
-    return {
-      type: "ref",
-      get definition() {
-        const result = registry.get(name);
-
-        if (!result) throw new Error();
-        if (result.type !== "object") throw new Error();
-
-        return result.definition;
-      },
-    };
+    return builder;
   }
 
   unionType<T, U>(config: UnionTypeConfig): UnionType {

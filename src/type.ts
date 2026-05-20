@@ -74,3 +74,7 @@ export interface UnionType extends Builder {
 export interface InterfaceType extends Builder {
   type: "interface";
 }
+
+export type Type = ScalarType | ObjectType<any, any> | EnumType;
+
+export type Registry = Map<string, Type>;

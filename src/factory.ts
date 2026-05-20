@@ -2,9 +2,12 @@ import type {
   EnumType,
   FieldConfig,
   InterfaceType,
+  ObjectRef,
   ObjectType,
   ObjectTypeConfig,
+  Ref,
   RefOrObject,
+  Registry,
   ScalarType,
   UnionType,
   UnionTypeConfig,
@@ -22,6 +25,7 @@ import {
 } from "graphql";
 import { mapValues } from "@std/collections";
 import { memo } from "./util.ts";
+import { isObjectType } from "graphql";
 
 export class ScalarTypeBuilder<T, U> implements ScalarType {
   type = "scalar" as const;
@@ -138,4 +142,30 @@ function toUnionTypeConfig(
 
 function toType<T, U>(objectType: RefOrObject<T, U>): GraphQLObjectType<T, U> {
   return objectType.definition;
+}
+
+export class RefBuilder implements Ref {
+  type = "ref" as const;
+  constructor(private registry: Registry, private key: string) {}
+
+  @memo
+  get definition() {
+    const result = this.registry.get(this.key);
+
+    if (!result) throw new Error();
+
+    return result.definition;
+  }
+}
+
+export class ObjectRefBuilder<T, U> extends RefBuilder
+  implements ObjectRef<T, U> {
+  @memo
+  override get definition(): GraphQLObjectType<T, U> {
+    const result = super.definition;
+
+    if (!isObjectType(result)) throw new Error();
+
+    return result;
+  }
 }
