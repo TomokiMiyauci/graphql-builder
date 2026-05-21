@@ -1,9 +1,12 @@
-import {
-  type GraphQLFieldResolver,
+import type {
+  GraphQLEnumType,
+  GraphQLFieldResolver,
   GraphQLInputObjectType,
+  GraphQLInterfaceType,
   GraphQLNamedType,
   GraphQLObjectType,
   GraphQLScalarType,
+  GraphQLUnionType,
 } from "graphql";
 
 export interface ObjectType<T, U> extends Builder {
@@ -19,14 +22,13 @@ export interface InputObjectType extends Builder {
 export interface UnionTypeConfig {
   name: string;
   description?: string;
-  types: readonly RefOrObject<unknown, unknown>[];
+  types: readonly ObjectType<unknown, unknown>[];
 }
 
 export interface EnumType extends Builder {
   type: "enum";
+  get definition(): GraphQLEnumType;
 }
-
-export type RefOrObject<T, U> = ObjectType<T, U> | ObjectRef<T, U>;
 
 export interface ScalarType<T = unknown, U = T> extends Builder {
   type: "scalar";
@@ -72,28 +74,23 @@ export interface InputFieldConfig {
 
 export type OutputType<T, U> =
   | ObjectType<T, U>
-  | RefType
   | ScalarType
   | UnionType
   | EnumType
   | InterfaceType;
 
-export type InputType = InputObjectType | RefType | ScalarType;
-
-export interface RefType extends Builder {
-  type: "ref";
-}
-
-export interface ObjectRef<T, U> extends RefType {
-  get definition(): GraphQLObjectType<T, U>;
-}
+export type InputType = InputObjectType | ScalarType;
 
 export interface UnionType extends Builder {
   type: "union";
+
+  get definition(): GraphQLUnionType;
 }
 
 export interface InterfaceType extends Builder {
   type: "interface";
+
+  get definition(): GraphQLInterfaceType;
 }
 
 export type Type = InputType | OutputType<any, any>;

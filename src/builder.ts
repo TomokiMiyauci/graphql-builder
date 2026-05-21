@@ -1,15 +1,18 @@
-import { GraphQLEnumTypeConfig, GraphQLScalarTypeConfig } from "graphql";
+// deno-lint-ignore-file no-explicit-any
+import type {
+  GraphQLEnumTypeConfig,
+  GraphQLObjectType,
+  GraphQLScalarType,
+  GraphQLScalarTypeConfig,
+} from "graphql";
 import type {
   EnumType,
   InputObjectType,
   InputObjectTypeConfig,
   InterfaceType,
   InterfaceTypeConfig,
-  ObjectRef,
   ObjectType,
   ObjectTypeConfig,
-  RefType,
-  Registry,
   ScalarType,
   Type,
   UnionType,
@@ -19,53 +22,79 @@ import {
   EnumTypeBuilder,
   InputObjectTypeBuilder,
   InterfaceTypeBuilder,
-  ObjectRefTypeBuilder,
   ObjectTypeBuilder,
-  RefTypeBuilder,
+  Registry,
   ScalarTypeBuilder,
   UnionTypeBuilder,
 } from "./factory.ts";
 
+interface Name {
+  name?: string;
+}
+
+export type ObjectTypeConfigOptions<T, U> =
+  & Omit<ObjectTypeConfig<T, U>, "name">
+  & Name;
+
+export type GraphQLScalarTypeConfigOptions<T, U> =
+  & Omit<GraphQLScalarTypeConfig<T, U>, "name">
+  & Name;
+
 export class SchemaBuilder {
-  #registry: Registry = new Map();
+  #registry = new Map();
 
-  scalar<T, U>(config: GraphQLScalarTypeConfig<T, U>): ScalarType<T, U> {
-    this.#assertExist(config.name);
+  #h: Map<
+    string,
+    Registry<GraphQLScalarTypeConfig<unknown, unknown>, GraphQLScalarType>
+  > = new Map();
+  #y: Map<
+    string,
+    Registry<ObjectTypeConfig<any, any>, GraphQLObjectType>
+  > = new Map();
 
-    const scalar = new ScalarTypeBuilder(config);
+  scalar<T, U>(
+    symbol: string,
+    options?: GraphQLScalarTypeConfigOptions<T, U>,
+  ): ScalarType {
+    const registry = this.#h.getOrInsert(symbol, new Registry());
 
-    return this.#register(config.name, scalar);
+    if (options) {
+      const config = {
+        ...options,
+        name: options.name ?? symbol,
+      } satisfies GraphQLScalarTypeConfig<T, U>;
+      registry.config.set(config);
+    }
+
+    return new ScalarTypeBuilder(registry);
   }
 
-  objectType<T, U>(config: ObjectTypeConfig<T, U>): ObjectType<T, U> {
-    this.#assertExist(config.name);
+  objectType<T, U>(
+    symbol: string,
+    options?: ObjectTypeConfigOptions<T, U>,
+  ): ObjectType<T, U> {
+    const registry = this.#y.getOrInsert(symbol, new Registry());
 
-    const objectType = new ObjectTypeBuilder(config);
+    if (options) {
+      const config = {
+        ...options,
+        name: options.name ?? symbol,
+      } satisfies ObjectTypeConfig<any, any>;
 
-    return this.#register(config.name, objectType);
+      registry.config.set(config);
+    }
+
+    return new ObjectTypeBuilder(registry);
   }
 
-  inputObjectType(config: InputObjectTypeConfig): InputObjectType {
+  inputObjectType(
+    config: InputObjectTypeConfig,
+  ): InputObjectType {
     this.#assertExist(config.name);
 
     const inputObjectType = new InputObjectTypeBuilder(config);
 
     return this.#register(config.name, inputObjectType);
-  }
-
-  ref(name: string): RefType {
-    const registry = this.#registry;
-
-    const builder = new RefTypeBuilder(registry, name);
-
-    return builder;
-  }
-
-  objectRef(name: string): ObjectRef<unknown, unknown> {
-    const registry = this.#registry;
-    const builder = new ObjectRefTypeBuilder(registry, name);
-
-    return builder;
   }
 
   unionType(config: UnionTypeConfig): UnionType {
@@ -84,7 +113,9 @@ export class SchemaBuilder {
     return this.#register(config.name, type);
   }
 
-  interfaceType<T, U>(config: InterfaceTypeConfig<T, U>): InterfaceType {
+  interfaceType<T, U>(
+    config: InterfaceTypeConfig<T, U>,
+  ): InterfaceType {
     this.#assertExist(config.name);
 
     const type = new InterfaceTypeBuilder(config);

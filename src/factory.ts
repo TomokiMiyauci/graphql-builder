@@ -6,46 +6,68 @@ import type {
   InputObjectType,
   InputObjectTypeConfig,
   InterfaceType,
-  ObjectRef,
   ObjectType,
   ObjectTypeConfig,
-  RefOrObject,
-  RefType,
-  Registry,
   ScalarType,
   UnionType,
   UnionTypeConfig,
 } from "./type.ts";
 import {
-  GraphQLArgumentConfig,
+  type GraphQLArgumentConfig,
   GraphQLEnumType,
-  GraphQLEnumTypeConfig,
-  GraphQLFieldConfig,
-  GraphQLInputFieldConfig,
+  type GraphQLEnumTypeConfig,
+  type GraphQLFieldConfig,
+  type GraphQLInputFieldConfig,
   GraphQLInputObjectType,
-  GraphQLInputObjectTypeConfig,
+  type GraphQLInputObjectTypeConfig,
   GraphQLInterfaceType,
   GraphQLObjectType,
-  GraphQLObjectTypeConfig,
+  type GraphQLObjectTypeConfig,
   GraphQLScalarType,
-  GraphQLScalarTypeConfig,
+  type GraphQLScalarTypeConfig,
   GraphQLUnionType,
-  GraphQLUnionTypeConfig,
-  isInputType,
-  isObjectType,
-  isOutputType,
+  type GraphQLUnionTypeConfig,
 } from "graphql";
 import { mapValues } from "@std/collections";
 import { memo } from "./util.ts";
 
+class Box<T> {
+  #value: T | undefined;
+  get value(): T | undefined {
+    return this.#value;
+  }
+  set(value: T): void {
+    this.#value = value;
+  }
+}
+
+export class Registry<T, U> {
+  config: Box<T> = new Box();
+  instance: Box<U> = new Box();
+}
+
 export class ScalarTypeBuilder<T, U> implements ScalarType {
   type = "scalar" as const;
 
-  constructor(private config: GraphQLScalarTypeConfig<T, U>) {}
+  constructor(
+    private registry: Registry<
+      GraphQLScalarTypeConfig<T, U>,
+      GraphQLScalarType
+    >,
+  ) {}
 
-  @memo
   get definition() {
-    const type = new GraphQLScalarType(this.config);
+    const instance = this.registry.instance.value;
+
+    if (instance) return instance;
+
+    const config = this.registry.config.value;
+
+    if (!config) throw new Error(`not found`);
+
+    const type = new GraphQLScalarType(config);
+
+    this.registry.instance.set(type);
 
     return type;
   }
@@ -53,16 +75,25 @@ export class ScalarTypeBuilder<T, U> implements ScalarType {
 
 export class ObjectTypeBuilder<T, U> implements ObjectType<T, U> {
   constructor(
-    private config: ObjectTypeConfig<T, U>,
+    private registry: Registry<ObjectTypeConfig<T, U>, GraphQLObjectType<T, U>>,
   ) {
   }
 
   type = "object" as const;
 
-  @memo
   get definition(): GraphQLObjectType<T, U> {
-    const config = toObjectTypeConfig(this.config);
+    const instance = this.registry.instance.value;
+
+    if (instance) return instance;
+
+    const raw = this.registry.config.value;
+
+    if (!raw) throw new Error(`not found`);
+
+    const config = toObjectTypeConfig(raw);
     const type = new GraphQLObjectType(config);
+
+    this.registry.instance.set(type);
 
     return type;
   }
@@ -113,8 +144,6 @@ function toInputFieldConfig(
   config: InputFieldConfig,
 ): GraphQLInputFieldConfig {
   const type = config.type.definition;
-
-  if (!isInputType(type)) throw new Error();
 
   return {
     defaultValue: config.defaultValue,
@@ -181,10 +210,6 @@ function toFieldConfig<T, U>(
 ): GraphQLFieldConfig<T, U> {
   const type = config.type.definition;
 
-  if (!isOutputType(type)) {
-    throw new Error();
-  }
-
   const args = mapValues(config.args ?? {}, toArgumentConfig);
 
   return {
@@ -196,8 +221,6 @@ function toFieldConfig<T, U>(
 
 function toArgumentConfig(config: ArgumentConfig): GraphQLArgumentConfig {
   const type = config.type.definition;
-
-  if (!isInputType(type)) throw new Error();
 
   return {
     type,
@@ -219,32 +242,6 @@ function toUnionTypeConfig(
   };
 }
 
-function toType<T, U>(objectType: RefOrObject<T, U>): GraphQLObjectType<T, U> {
+function toType<T, U>(objectType: ObjectType<T, U>): GraphQLObjectType<T, U> {
   return objectType.definition;
-}
-
-export class RefTypeBuilder implements RefType {
-  type = "ref" as const;
-  constructor(private registry: Registry, private key: string) {}
-
-  @memo
-  get definition() {
-    const result = this.registry.get(this.key);
-
-    if (!result) throw new Error();
-
-    return result.definition;
-  }
-}
-
-export class ObjectRefTypeBuilder<T, U> extends RefTypeBuilder
-  implements ObjectRef<T, U> {
-  @memo
-  override get definition(): GraphQLObjectType<T, U> {
-    const result = super.definition;
-
-    if (!isObjectType(result)) throw new Error();
-
-    return result;
-  }
 }
