@@ -1,6 +1,8 @@
 import { GraphQLEnumTypeConfig, GraphQLScalarTypeConfig } from "graphql";
 import type {
   EnumType,
+  InputObjectType,
+  InputObjectTypeConfig,
   InterfaceType,
   InterfaceTypeConfig,
   ObjectRef,
@@ -15,6 +17,7 @@ import type {
 } from "./type.ts";
 import {
   EnumTypeBuilder,
+  InputObjectTypeBuilder,
   InterfaceTypeBuilder,
   ObjectRefBuilder,
   ObjectTypeBuilder,
@@ -44,6 +47,16 @@ export class SchemaBuilder {
     this.#registry.set(config.name, objectType);
 
     return objectType;
+  }
+
+  inputObjectType(config: InputObjectTypeConfig): InputObjectType {
+    this.#assertExist(config.name);
+
+    const inputObjectType = new InputObjectTypeBuilder(config);
+
+    this.#registry.set(config.name, inputObjectType);
+
+    return inputObjectType;
   }
 
   ref(name: string): Ref {
@@ -87,7 +100,7 @@ export class SchemaBuilder {
 
   #assertExist(name: string): void {
     if (this.#registry.has(name)) {
-      throw new Error();
+      throw new Error(`Already exists "${name}"`);
     }
   }
 }

@@ -1,6 +1,9 @@
 import type {
   EnumType,
   FieldConfig,
+  InputFieldConfig,
+  InputObjectType,
+  InputObjectTypeConfig,
   InterfaceType,
   ObjectRef,
   ObjectType,
@@ -16,16 +19,21 @@ import {
   GraphQLEnumType,
   GraphQLEnumTypeConfig,
   GraphQLFieldConfig,
+  GraphQLInputFieldConfig,
+  GraphQLInputObjectType,
+  GraphQLInputObjectTypeConfig,
   GraphQLInterfaceType,
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLScalarTypeConfig,
   GraphQLUnionType,
   GraphQLUnionTypeConfig,
+  isInputType,
+  isObjectType,
+  isOutputType,
 } from "graphql";
 import { mapValues } from "@std/collections";
 import { memo } from "./util.ts";
-import { isObjectType } from "graphql";
 
 export class ScalarTypeBuilder<T, U> implements ScalarType {
   type = "scalar" as const;
@@ -66,7 +74,45 @@ export class ObjectTypeBuilder<T, U> implements ObjectType<T, U> {
   }
 }
 
-export class UnionTypeBuilder<T, U> implements UnionType {
+export class InputObjectTypeBuilder implements InputObjectType {
+  constructor(private config: InputObjectTypeConfig) {}
+  type = "input-object" as const;
+
+  get definition() {
+    const config = toInputObjectTypeConfig(this.config);
+    const type = new GraphQLInputObjectType(config);
+
+    return type;
+  }
+}
+
+function toInputObjectTypeConfig(
+  config: InputObjectTypeConfig,
+): GraphQLInputObjectTypeConfig {
+  const fields = mapValues(config.fields, toInputFieldConfig);
+
+  return {
+    name: config.name,
+    fields,
+  };
+}
+
+function toInputFieldConfig(
+  config: InputFieldConfig,
+): GraphQLInputFieldConfig {
+  const type = config.type.definition;
+
+  if (!isInputType(type)) throw new Error();
+
+  return {
+    defaultValue: config.defaultValue,
+    deprecationReason: config.deprecationReason,
+    description: config.description,
+    type,
+  };
+}
+
+export class UnionTypeBuilder implements UnionType {
   constructor(private config: UnionTypeConfig) {}
 
   type = "union" as const;
@@ -121,6 +167,10 @@ function fieldConfigTo<T, U>(
   config: FieldConfig<T, U>,
 ): GraphQLFieldConfig<T, U> {
   const type = config.type.definition;
+
+  if (!isOutputType(type)) {
+    throw new Error();
+  }
 
   return {
     type,
