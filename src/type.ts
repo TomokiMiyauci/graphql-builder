@@ -71,19 +71,19 @@ export interface InputFieldConfig {
 
 export type OutputType<T, U> =
   | ObjectType<T, U>
-  | Ref
+  | RefType
   | ScalarType
   | UnionType
   | EnumType
   | InterfaceType;
 
-export type InputType = InputObjectType | Ref | ScalarType;
+export type InputType = InputObjectType | RefType | ScalarType;
 
-export interface Ref extends Builder {
+export interface RefType extends Builder {
   type: "ref";
 }
 
-export interface ObjectRef<T, U> extends Ref {
+export interface ObjectRef<T, U> extends RefType {
   get definition(): GraphQLObjectType<T, U>;
 }
 

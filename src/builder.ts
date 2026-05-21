@@ -8,7 +8,7 @@ import type {
   ObjectRef,
   ObjectType,
   ObjectTypeConfig,
-  Ref,
+  RefType,
   Registry,
   ScalarType,
   Type,
@@ -59,7 +59,7 @@ export class SchemaBuilder {
     return inputObjectType;
   }
 
-  ref(name: string): Ref {
+  ref(name: string): RefType {
     const registry = this.#registry;
 
     const builder = new RefBuilder(registry, name);
