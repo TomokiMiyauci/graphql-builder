@@ -60,6 +60,7 @@ export interface FieldConfig<T, U, TArgs = unknown> {
   type: OutputType<T, U>;
   resolve?: GraphQLFieldResolver<T, U, TArgs>;
   deprecationReason?: string;
+  args?: FieldConfigArgumentMap;
 }
 
 export interface InputFieldConfig {
@@ -98,3 +99,12 @@ export interface InterfaceType extends Builder {
 export type Type = InputType | OutputType<any, any>;
 
 export type Registry = Map<string, Type>;
+
+export type FieldConfigArgumentMap = Record<string, ArgumentConfig>;
+
+export interface ArgumentConfig {
+  description?: string;
+  type: InputType;
+  defaultValue?: unknown;
+  deprecationReason?: string;
+}

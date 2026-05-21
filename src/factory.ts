@@ -1,4 +1,5 @@
 import type {
+  ArgumentConfig,
   EnumType,
   FieldConfig,
   InputFieldConfig,
@@ -16,6 +17,7 @@ import type {
   UnionTypeConfig,
 } from "./type.ts";
 import {
+  GraphQLArgumentConfig,
   GraphQLEnumType,
   GraphQLEnumTypeConfig,
   GraphQLFieldConfig,
@@ -24,6 +26,7 @@ import {
   GraphQLInputObjectTypeConfig,
   GraphQLInterfaceType,
   GraphQLObjectType,
+  GraphQLObjectTypeConfig,
   GraphQLScalarType,
   GraphQLScalarTypeConfig,
   GraphQLUnionType,
@@ -58,26 +61,35 @@ export class ObjectTypeBuilder<T, U> implements ObjectType<T, U> {
 
   @memo
   get definition(): GraphQLObjectType<T, U> {
-    const type = new GraphQLObjectType({
-      name: this.config.name,
-      fields: () => {
-        const fields = mapValues(
-          this.config.fields,
-          fieldConfigTo,
-        );
-
-        return fields;
-      },
-    });
+    const config = toObjectTypeConfig(this.config);
+    const type = new GraphQLObjectType(config);
 
     return type;
   }
+}
+
+function toObjectTypeConfig<T, U>(
+  config: ObjectTypeConfig<T, U>,
+): GraphQLObjectTypeConfig<T, U> {
+  return {
+    name: config.name,
+    fields: () => {
+      const fields = mapValues(
+        config.fields,
+        toFieldConfig,
+      );
+
+      return fields;
+    },
+    description: config.description,
+  };
 }
 
 export class InputObjectTypeBuilder implements InputObjectType {
   constructor(private config: InputObjectTypeConfig) {}
   type = "input-object" as const;
 
+  @memo
   get definition() {
     const config = toInputObjectTypeConfig(this.config);
     const type = new GraphQLInputObjectType(config);
@@ -146,13 +158,14 @@ export class InterfaceTypeBuilder<T, U> implements InterfaceType {
 
   type = "interface" as const;
 
+  @memo
   get definition() {
     const type = new GraphQLInterfaceType({
       name: this.config.name,
       fields: () => {
         const fields = mapValues(
           this.config.fields,
-          fieldConfigTo,
+          toFieldConfig,
         );
 
         return fields;
@@ -163,7 +176,7 @@ export class InterfaceTypeBuilder<T, U> implements InterfaceType {
   }
 }
 
-function fieldConfigTo<T, U>(
+function toFieldConfig<T, U>(
   config: FieldConfig<T, U>,
 ): GraphQLFieldConfig<T, U> {
   const type = config.type.definition;
@@ -172,9 +185,25 @@ function fieldConfigTo<T, U>(
     throw new Error();
   }
 
+  const args = mapValues(config.args ?? {}, toArgumentConfig);
+
   return {
     type,
     resolve: config.resolve,
+    args,
+  };
+}
+
+function toArgumentConfig(config: ArgumentConfig): GraphQLArgumentConfig {
+  const type = config.type.definition;
+
+  if (!isInputType(type)) throw new Error();
+
+  return {
+    type,
+    defaultValue: config.defaultValue,
+    deprecationReason: config.deprecationReason,
+    description: config.description,
   };
 }
 
