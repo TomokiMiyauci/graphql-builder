@@ -6,10 +6,10 @@ import type {
   ObjectRef,
   ObjectType,
   ObjectTypeConfig,
-  OutputConfig,
   Ref,
   Registry,
   ScalarType,
+  Type,
   UnionType,
   UnionTypeConfig,
 } from "./type.ts";
@@ -27,21 +27,23 @@ export class SchemaBuilder {
   #registry: Registry = new Map();
 
   scalar<Y, Z>(config: GraphQLScalarTypeConfig<Y, Z>): ScalarType {
+    this.#assertExist(config.name);
+
     const scalar = new ScalarTypeBuilder(config);
-    const type = this.#registry.getOrInsert(config.name, scalar);
 
-    if (type.type !== "scalar") throw new Error();
+    this.#registry.set(config.name, scalar);
 
-    return type;
+    return scalar;
   }
 
   objectType<T, U>(config: ObjectTypeConfig<T, U>): ObjectType<T, U> {
+    this.#assertExist(config.name);
+
     const objectType = new ObjectTypeBuilder(config);
-    const type = this.#registry.getOrInsert(config.name, objectType);
 
-    if (type.type !== "object") throw new Error();
+    this.#registry.set(config.name, objectType);
 
-    return type;
+    return objectType;
   }
 
   ref(name: string): Ref {
@@ -59,7 +61,7 @@ export class SchemaBuilder {
     return builder;
   }
 
-  unionType<T, U>(config: UnionTypeConfig): UnionType {
+  unionType(config: UnionTypeConfig): UnionType {
     const union = new UnionTypeBuilder(config);
 
     return union;
@@ -79,7 +81,13 @@ export class SchemaBuilder {
     return type;
   }
 
-  types(): OutputConfig<any, any>[] {
+  types(): Type[] {
     return this.#registry.values().toArray();
+  }
+
+  #assertExist(name: string): void {
+    if (this.#registry.has(name)) {
+      throw new Error();
+    }
   }
 }
