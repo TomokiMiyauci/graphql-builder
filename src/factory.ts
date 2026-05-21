@@ -8,8 +8,8 @@ import type {
   ObjectRef,
   ObjectType,
   ObjectTypeConfig,
-  Ref,
   RefOrObject,
+  RefType,
   Registry,
   ScalarType,
   UnionType,
@@ -194,7 +194,7 @@ function toType<T, U>(objectType: RefOrObject<T, U>): GraphQLObjectType<T, U> {
   return objectType.definition;
 }
 
-export class RefBuilder implements Ref {
+export class RefTypeBuilder implements RefType {
   type = "ref" as const;
   constructor(private registry: Registry, private key: string) {}
 
@@ -208,7 +208,7 @@ export class RefBuilder implements Ref {
   }
 }
 
-export class ObjectRefBuilder<T, U> extends RefBuilder
+export class ObjectRefTypeBuilder<T, U> extends RefTypeBuilder
   implements ObjectRef<T, U> {
   @memo
   override get definition(): GraphQLObjectType<T, U> {

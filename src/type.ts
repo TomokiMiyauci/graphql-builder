@@ -28,9 +28,9 @@ export interface EnumType extends Builder {
 
 export type RefOrObject<T, U> = ObjectType<T, U> | ObjectRef<T, U>;
 
-export interface ScalarType extends Builder {
+export interface ScalarType<T = unknown, U = T> extends Builder {
   type: "scalar";
-  get definition(): GraphQLScalarType;
+  get definition(): GraphQLScalarType<T, U>;
 }
 
 interface Builder {

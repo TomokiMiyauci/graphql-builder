@@ -19,9 +19,9 @@ import {
   EnumTypeBuilder,
   InputObjectTypeBuilder,
   InterfaceTypeBuilder,
-  ObjectRefBuilder,
+  ObjectRefTypeBuilder,
   ObjectTypeBuilder,
-  RefBuilder,
+  RefTypeBuilder,
   ScalarTypeBuilder,
   UnionTypeBuilder,
 } from "./factory.ts";
@@ -29,7 +29,7 @@ import {
 export class SchemaBuilder {
   #registry: Registry = new Map();
 
-  scalar<Y, Z>(config: GraphQLScalarTypeConfig<Y, Z>): ScalarType {
+  scalar<T, U>(config: GraphQLScalarTypeConfig<T, U>): ScalarType<T, U> {
     this.#assertExist(config.name);
 
     const scalar = new ScalarTypeBuilder(config);
@@ -62,14 +62,14 @@ export class SchemaBuilder {
   ref(name: string): RefType {
     const registry = this.#registry;
 
-    const builder = new RefBuilder(registry, name);
+    const builder = new RefTypeBuilder(registry, name);
 
     return builder;
   }
 
   objectRef(name: string): ObjectRef<unknown, unknown> {
     const registry = this.#registry;
-    const builder = new ObjectRefBuilder(registry, name);
+    const builder = new ObjectRefTypeBuilder(registry, name);
 
     return builder;
   }
