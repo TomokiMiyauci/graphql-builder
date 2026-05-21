@@ -34,9 +34,7 @@ export class SchemaBuilder {
 
     const scalar = new ScalarTypeBuilder(config);
 
-    this.#registry.set(config.name, scalar);
-
-    return scalar;
+    return this.#register(config.name, scalar);
   }
 
   objectType<T, U>(config: ObjectTypeConfig<T, U>): ObjectType<T, U> {
@@ -44,9 +42,7 @@ export class SchemaBuilder {
 
     const objectType = new ObjectTypeBuilder(config);
 
-    this.#registry.set(config.name, objectType);
-
-    return objectType;
+    return this.#register(config.name, objectType);
   }
 
   inputObjectType(config: InputObjectTypeConfig): InputObjectType {
@@ -54,9 +50,7 @@ export class SchemaBuilder {
 
     const inputObjectType = new InputObjectTypeBuilder(config);
 
-    this.#registry.set(config.name, inputObjectType);
-
-    return inputObjectType;
+    return this.#register(config.name, inputObjectType);
   }
 
   ref(name: string): RefType {
@@ -75,23 +69,27 @@ export class SchemaBuilder {
   }
 
   unionType(config: UnionTypeConfig): UnionType {
+    this.#assertExist(config.name);
+
     const union = new UnionTypeBuilder(config);
 
-    return union;
+    return this.#register(config.name, union);
   }
 
   enumType(config: GraphQLEnumTypeConfig): EnumType {
+    this.#assertExist(config.name);
+
     const type = new EnumTypeBuilder(config);
 
-    this.#registry.set(config.name, type);
-
-    return type;
+    return this.#register(config.name, type);
   }
 
   interfaceType<T, U>(config: InterfaceTypeConfig<T, U>): InterfaceType {
+    this.#assertExist(config.name);
+
     const type = new InterfaceTypeBuilder(config);
 
-    return type;
+    return this.#register(config.name, type);
   }
 
   types(): Type[] {
@@ -102,5 +100,11 @@ export class SchemaBuilder {
     if (this.#registry.has(name)) {
       throw new Error(`Already exists "${name}"`);
     }
+  }
+
+  #register<T extends Type>(name: string, type: T): T {
+    this.#registry.set(name, type);
+
+    return type;
   }
 }
