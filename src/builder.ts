@@ -31,40 +31,32 @@ import {
   UnionTypeBuilder,
 } from "./factory.ts";
 
+class Scope {
+  #map: Map<string, { registry: Registry<any, any>; group: string }> =
+    new Map();
+
+  getOrInsert<T, U>(
+    name: string,
+    group: string,
+    registry: Registry<T, U>,
+  ): Registry<T, U> {
+    if (this.#map.has(name)) {
+      const pair = this.#map.get(name)!;
+
+      if (group === pair.group) {
+        return pair.registry;
+      }
+
+      throw new Error(`"${name}" is already defined as "${group}"`);
+    } else {
+      this.#map.set(name, { registry, group });
+      return registry;
+    }
+  }
+}
+
 export class SchemaBuilder {
-  #registries: {
-    scalar: Map<
-      string,
-      Registry<GraphQLScalarTypeConfig<unknown, unknown>, GraphQLScalarType>
-    >;
-    object: Map<
-      string,
-      Registry<ObjectTypeConfig<any, any>, GraphQLObjectType>
-    >;
-    inputObject: Map<
-      string,
-      Registry<InputObjectTypeConfig, GraphQLInputObjectType>
-    >;
-    union: Map<
-      string,
-      Registry<UnionTypeConfig, GraphQLUnionType>
-    >;
-    enum: Map<
-      string,
-      Registry<GraphQLEnumTypeConfig, GraphQLEnumType>
-    >;
-    interface: Map<
-      string,
-      Registry<InterfaceTypeConfig<unknown, unknown>, GraphQLInterfaceType>
-    >;
-  } = {
-    scalar: new Map(),
-    object: new Map(),
-    inputObject: new Map(),
-    union: new Map(),
-    enum: new Map(),
-    interface: new Map(),
-  };
+  #registry = new Scope();
 
   scalar<T, U>(
     symbolOrConfig: string | GraphQLScalarTypeConfig<T, U>,
@@ -72,9 +64,10 @@ export class SchemaBuilder {
     const name = typeof symbolOrConfig === "string"
       ? symbolOrConfig
       : symbolOrConfig.name;
-    const registry = this.#registries.scalar.getOrInsert(
+    const registry = this.#registry.getOrInsert(
       name,
-      new Registry(),
+      "scalar",
+      new Registry<GraphQLScalarTypeConfig<T, U>, GraphQLScalarType>(),
     );
 
     if (typeof symbolOrConfig === "object") {
@@ -90,9 +83,11 @@ export class SchemaBuilder {
     const name = typeof symbolOrConfig === "string"
       ? symbolOrConfig
       : symbolOrConfig.name;
-    const registry = this.#registries.object.getOrInsert(
+
+    const registry = this.#registry.getOrInsert(
       name,
-      new Registry(),
+      "object",
+      new Registry<ObjectTypeConfig<T, U>, GraphQLObjectType<T, U>>(),
     );
 
     if (typeof symbolOrConfig === "object") {
@@ -108,9 +103,10 @@ export class SchemaBuilder {
     const name = typeof symbolOrConfig === "string"
       ? symbolOrConfig
       : symbolOrConfig.name;
-    const registry = this.#registries.inputObject.getOrInsert(
+    const registry = this.#registry.getOrInsert(
       name,
-      new Registry(),
+      "input-object",
+      new Registry<InputObjectTypeConfig, GraphQLInputObjectType>(),
     );
 
     if (typeof symbolOrConfig === "object") {
@@ -127,7 +123,11 @@ export class SchemaBuilder {
       ? symbolOrConfig
       : symbolOrConfig.name;
 
-    const registry = this.#registries.union.getOrInsert(name, new Registry());
+    const registry = this.#registry.getOrInsert(
+      name,
+      "union",
+      new Registry<UnionTypeConfig, GraphQLUnionType>(),
+    );
 
     if (typeof symbolOrConfig === "object") {
       registry.config.set(symbolOrConfig);
@@ -142,7 +142,11 @@ export class SchemaBuilder {
     const name = typeof symbolOrConfig === "string"
       ? symbolOrConfig
       : symbolOrConfig.name;
-    const registry = this.#registries.enum.getOrInsert(name, new Registry());
+    const registry = this.#registry.getOrInsert(
+      name,
+      "enum",
+      new Registry<GraphQLEnumTypeConfig, GraphQLEnumType>(),
+    );
 
     if (typeof symbolOrConfig === "object") {
       registry.config.set(symbolOrConfig);
@@ -159,9 +163,10 @@ export class SchemaBuilder {
     const name = typeof symbolOrConfig === "string"
       ? symbolOrConfig
       : symbolOrConfig.name;
-    const registry = this.#registries.interface.getOrInsert(
+    const registry = this.#registry.getOrInsert(
       name,
-      new Registry(),
+      "interface",
+      new Registry<InterfaceTypeConfig<T, U>, GraphQLInterfaceType>(),
     );
 
     if (typeof symbolOrConfig === "object") {
