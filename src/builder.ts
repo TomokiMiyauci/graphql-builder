@@ -59,51 +59,51 @@ export class SchemaBuilder {
   #registry = new Scope();
 
   scalar<T, U>(
-    symbolOrConfig: string | GraphQLScalarTypeConfig<T, U>,
+    nameOrConfig: string | GraphQLScalarTypeConfig<T, U>,
   ): ScalarType {
-    const name = normalizeName(symbolOrConfig);
+    const name = normalizeName(nameOrConfig);
     const registry = this.#registry.getOrInsert(
       name,
       "scalar",
       new Registry<GraphQLScalarTypeConfig<T, U>, GraphQLScalarType>(),
     );
 
-    if (typeof symbolOrConfig === "object") {
-      registry.config.set(symbolOrConfig);
+    if (typeof nameOrConfig === "object") {
+      registry.config.set(nameOrConfig);
     }
 
     return new ScalarTypeBuilder(registry);
   }
 
   objectType<T, U>(
-    symbolOrConfig: string | ObjectTypeConfig<T, U>,
+    nameOrConfig: string | ObjectTypeConfig<T, U>,
   ): ObjectType<T, U> {
-    const name = normalizeName(symbolOrConfig);
+    const name = normalizeName(nameOrConfig);
     const registry = this.#registry.getOrInsert(
       name,
       "object",
       new Registry<ObjectTypeConfig<T, U>, GraphQLObjectType<T, U>>(),
     );
 
-    if (typeof symbolOrConfig === "object") {
-      registry.config.set(symbolOrConfig);
+    if (typeof nameOrConfig === "object") {
+      registry.config.set(nameOrConfig);
     }
 
     return new ObjectTypeBuilder(registry);
   }
 
   inputObjectType(
-    symbolOrConfig: string | InputObjectTypeConfig,
+    nameOrConfig: string | InputObjectTypeConfig,
   ): InputObjectType {
-    const name = normalizeName(symbolOrConfig);
+    const name = normalizeName(nameOrConfig);
     const registry = this.#registry.getOrInsert(
       name,
       "input-object",
       new Registry<InputObjectTypeConfig, GraphQLInputObjectType>(),
     );
 
-    if (typeof symbolOrConfig === "object") {
-      registry.config.set(symbolOrConfig);
+    if (typeof nameOrConfig === "object") {
+      registry.config.set(nameOrConfig);
     }
 
     const inputObjectType = new InputObjectTypeBuilder(registry);
@@ -111,16 +111,16 @@ export class SchemaBuilder {
     return inputObjectType;
   }
 
-  unionType(symbolOrConfig: string | UnionTypeConfig): UnionType {
-    const name = normalizeName(symbolOrConfig);
+  unionType(nameOrConfig: string | UnionTypeConfig): UnionType {
+    const name = normalizeName(nameOrConfig);
     const registry = this.#registry.getOrInsert(
       name,
       "union",
       new Registry<UnionTypeConfig, GraphQLUnionType>(),
     );
 
-    if (typeof symbolOrConfig === "object") {
-      registry.config.set(symbolOrConfig);
+    if (typeof nameOrConfig === "object") {
+      registry.config.set(nameOrConfig);
     }
 
     const union = new UnionTypeBuilder(registry);
@@ -128,16 +128,16 @@ export class SchemaBuilder {
     return union;
   }
 
-  enumType(symbolOrConfig: string | GraphQLEnumTypeConfig): EnumType {
-    const name = normalizeName(symbolOrConfig);
+  enumType(nameOrConfig: string | GraphQLEnumTypeConfig): EnumType {
+    const name = normalizeName(nameOrConfig);
     const registry = this.#registry.getOrInsert(
       name,
       "enum",
       new Registry<GraphQLEnumTypeConfig, GraphQLEnumType>(),
     );
 
-    if (typeof symbolOrConfig === "object") {
-      registry.config.set(symbolOrConfig);
+    if (typeof nameOrConfig === "object") {
+      registry.config.set(nameOrConfig);
     }
 
     const type = new EnumTypeBuilder(registry);
@@ -146,17 +146,17 @@ export class SchemaBuilder {
   }
 
   interfaceType<T, U>(
-    symbolOrConfig: string | InterfaceTypeConfig<T, U>,
+    nameOrConfig: string | InterfaceTypeConfig<T, U>,
   ): InterfaceType {
-    const name = normalizeName(symbolOrConfig);
+    const name = normalizeName(nameOrConfig);
     const registry = this.#registry.getOrInsert(
       name,
       "interface",
       new Registry<InterfaceTypeConfig<T, U>, GraphQLInterfaceType>(),
     );
 
-    if (typeof symbolOrConfig === "object") {
-      registry.config.set(symbolOrConfig);
+    if (typeof nameOrConfig === "object") {
+      registry.config.set(nameOrConfig);
     }
 
     const type = new InterfaceTypeBuilder(registry);
