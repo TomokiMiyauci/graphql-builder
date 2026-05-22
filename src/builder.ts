@@ -1,9 +1,13 @@
 // deno-lint-ignore-file no-explicit-any
 import type {
+  GraphQLEnumType,
   GraphQLEnumTypeConfig,
+  GraphQLInputObjectType,
+  GraphQLInterfaceType,
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLScalarTypeConfig,
+  GraphQLUnionType,
 } from "graphql";
 import type {
   EnumType,
@@ -14,7 +18,6 @@ import type {
   ObjectType,
   ObjectTypeConfig,
   ScalarType,
-  Type,
   UnionType,
   UnionTypeConfig,
 } from "./type.ts";
@@ -28,113 +31,144 @@ import {
   UnionTypeBuilder,
 } from "./factory.ts";
 
-interface Name {
-  name?: string;
-}
-
-export type ObjectTypeConfigOptions<T, U> =
-  & Omit<ObjectTypeConfig<T, U>, "name">
-  & Name;
-
-export type GraphQLScalarTypeConfigOptions<T, U> =
-  & Omit<GraphQLScalarTypeConfig<T, U>, "name">
-  & Name;
-
 export class SchemaBuilder {
-  #registry = new Map();
-
-  #h: Map<
-    string,
-    Registry<GraphQLScalarTypeConfig<unknown, unknown>, GraphQLScalarType>
-  > = new Map();
-  #y: Map<
-    string,
-    Registry<ObjectTypeConfig<any, any>, GraphQLObjectType>
-  > = new Map();
+  #registries: {
+    scalar: Map<
+      string,
+      Registry<GraphQLScalarTypeConfig<unknown, unknown>, GraphQLScalarType>
+    >;
+    object: Map<
+      string,
+      Registry<ObjectTypeConfig<any, any>, GraphQLObjectType>
+    >;
+    inputObject: Map<
+      string,
+      Registry<InputObjectTypeConfig, GraphQLInputObjectType>
+    >;
+    union: Map<
+      string,
+      Registry<UnionTypeConfig, GraphQLUnionType>
+    >;
+    enum: Map<
+      string,
+      Registry<GraphQLEnumTypeConfig, GraphQLEnumType>
+    >;
+    interface: Map<
+      string,
+      Registry<InterfaceTypeConfig<unknown, unknown>, GraphQLInterfaceType>
+    >;
+  } = {
+    scalar: new Map(),
+    object: new Map(),
+    inputObject: new Map(),
+    union: new Map(),
+    enum: new Map(),
+    interface: new Map(),
+  };
 
   scalar<T, U>(
-    symbol: string,
-    options?: GraphQLScalarTypeConfigOptions<T, U>,
+    symbolOrConfig: string | GraphQLScalarTypeConfig<T, U>,
   ): ScalarType {
-    const registry = this.#h.getOrInsert(symbol, new Registry());
+    const name = typeof symbolOrConfig === "string"
+      ? symbolOrConfig
+      : symbolOrConfig.name;
+    const registry = this.#registries.scalar.getOrInsert(
+      name,
+      new Registry(),
+    );
 
-    if (options) {
-      const config = {
-        ...options,
-        name: options.name ?? symbol,
-      } satisfies GraphQLScalarTypeConfig<T, U>;
-      registry.config.set(config);
+    if (typeof symbolOrConfig === "object") {
+      registry.config.set(symbolOrConfig);
     }
 
     return new ScalarTypeBuilder(registry);
   }
 
   objectType<T, U>(
-    symbol: string,
-    options?: ObjectTypeConfigOptions<T, U>,
+    symbolOrConfig: string | ObjectTypeConfig<T, U>,
   ): ObjectType<T, U> {
-    const registry = this.#y.getOrInsert(symbol, new Registry());
+    const name = typeof symbolOrConfig === "string"
+      ? symbolOrConfig
+      : symbolOrConfig.name;
+    const registry = this.#registries.object.getOrInsert(
+      name,
+      new Registry(),
+    );
 
-    if (options) {
-      const config = {
-        ...options,
-        name: options.name ?? symbol,
-      } satisfies ObjectTypeConfig<any, any>;
-
-      registry.config.set(config);
+    if (typeof symbolOrConfig === "object") {
+      registry.config.set(symbolOrConfig);
     }
 
     return new ObjectTypeBuilder(registry);
   }
 
   inputObjectType(
-    config: InputObjectTypeConfig,
+    symbolOrConfig: string | InputObjectTypeConfig,
   ): InputObjectType {
-    this.#assertExist(config.name);
+    const name = typeof symbolOrConfig === "string"
+      ? symbolOrConfig
+      : symbolOrConfig.name;
+    const registry = this.#registries.inputObject.getOrInsert(
+      name,
+      new Registry(),
+    );
 
-    const inputObjectType = new InputObjectTypeBuilder(config);
+    if (typeof symbolOrConfig === "object") {
+      registry.config.set(symbolOrConfig);
+    }
 
-    return this.#register(config.name, inputObjectType);
+    const inputObjectType = new InputObjectTypeBuilder(registry);
+
+    return inputObjectType;
   }
 
-  unionType(config: UnionTypeConfig): UnionType {
-    this.#assertExist(config.name);
+  unionType(symbolOrConfig: string | UnionTypeConfig): UnionType {
+    const name = typeof symbolOrConfig === "string"
+      ? symbolOrConfig
+      : symbolOrConfig.name;
 
-    const union = new UnionTypeBuilder(config);
+    const registry = this.#registries.union.getOrInsert(name, new Registry());
 
-    return this.#register(config.name, union);
+    if (typeof symbolOrConfig === "object") {
+      registry.config.set(symbolOrConfig);
+    }
+
+    const union = new UnionTypeBuilder(registry);
+
+    return union;
   }
 
-  enumType(config: GraphQLEnumTypeConfig): EnumType {
-    this.#assertExist(config.name);
+  enumType(symbolOrConfig: string | GraphQLEnumTypeConfig): EnumType {
+    const name = typeof symbolOrConfig === "string"
+      ? symbolOrConfig
+      : symbolOrConfig.name;
+    const registry = this.#registries.enum.getOrInsert(name, new Registry());
 
-    const type = new EnumTypeBuilder(config);
+    if (typeof symbolOrConfig === "object") {
+      registry.config.set(symbolOrConfig);
+    }
 
-    return this.#register(config.name, type);
+    const type = new EnumTypeBuilder(registry);
+
+    return type;
   }
 
   interfaceType<T, U>(
-    config: InterfaceTypeConfig<T, U>,
+    symbolOrConfig: string | InterfaceTypeConfig<T, U>,
   ): InterfaceType {
-    this.#assertExist(config.name);
+    const name = typeof symbolOrConfig === "string"
+      ? symbolOrConfig
+      : symbolOrConfig.name;
+    const registry = this.#registries.interface.getOrInsert(
+      name,
+      new Registry(),
+    );
 
-    const type = new InterfaceTypeBuilder(config);
-
-    return this.#register(config.name, type);
-  }
-
-  types(): Type[] {
-    return this.#registry.values().toArray();
-  }
-
-  #assertExist(name: string): void {
-    if (this.#registry.has(name)) {
-      throw new Error(`Already exists "${name}"`);
+    if (typeof symbolOrConfig === "object") {
+      registry.config.set(symbolOrConfig);
     }
-  }
 
-  #register<T extends Type>(name: string, type: T): T {
-    this.#registry.set(name, type);
+    const type = new InterfaceTypeBuilder(registry);
 
     return type;
   }
