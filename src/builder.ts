@@ -61,9 +61,7 @@ export class SchemaBuilder {
   scalar<T, U>(
     symbolOrConfig: string | GraphQLScalarTypeConfig<T, U>,
   ): ScalarType {
-    const name = typeof symbolOrConfig === "string"
-      ? symbolOrConfig
-      : symbolOrConfig.name;
+    const name = normalizeName(symbolOrConfig);
     const registry = this.#registry.getOrInsert(
       name,
       "scalar",
@@ -80,10 +78,7 @@ export class SchemaBuilder {
   objectType<T, U>(
     symbolOrConfig: string | ObjectTypeConfig<T, U>,
   ): ObjectType<T, U> {
-    const name = typeof symbolOrConfig === "string"
-      ? symbolOrConfig
-      : symbolOrConfig.name;
-
+    const name = normalizeName(symbolOrConfig);
     const registry = this.#registry.getOrInsert(
       name,
       "object",
@@ -100,9 +95,7 @@ export class SchemaBuilder {
   inputObjectType(
     symbolOrConfig: string | InputObjectTypeConfig,
   ): InputObjectType {
-    const name = typeof symbolOrConfig === "string"
-      ? symbolOrConfig
-      : symbolOrConfig.name;
+    const name = normalizeName(symbolOrConfig);
     const registry = this.#registry.getOrInsert(
       name,
       "input-object",
@@ -119,10 +112,7 @@ export class SchemaBuilder {
   }
 
   unionType(symbolOrConfig: string | UnionTypeConfig): UnionType {
-    const name = typeof symbolOrConfig === "string"
-      ? symbolOrConfig
-      : symbolOrConfig.name;
-
+    const name = normalizeName(symbolOrConfig);
     const registry = this.#registry.getOrInsert(
       name,
       "union",
@@ -139,9 +129,7 @@ export class SchemaBuilder {
   }
 
   enumType(symbolOrConfig: string | GraphQLEnumTypeConfig): EnumType {
-    const name = typeof symbolOrConfig === "string"
-      ? symbolOrConfig
-      : symbolOrConfig.name;
+    const name = normalizeName(symbolOrConfig);
     const registry = this.#registry.getOrInsert(
       name,
       "enum",
@@ -160,9 +148,7 @@ export class SchemaBuilder {
   interfaceType<T, U>(
     symbolOrConfig: string | InterfaceTypeConfig<T, U>,
   ): InterfaceType {
-    const name = typeof symbolOrConfig === "string"
-      ? symbolOrConfig
-      : symbolOrConfig.name;
+    const name = normalizeName(symbolOrConfig);
     const registry = this.#registry.getOrInsert(
       name,
       "interface",
@@ -177,4 +163,14 @@ export class SchemaBuilder {
 
     return type;
   }
+}
+
+type NameOrNamed = string | Named;
+
+interface Named {
+  name: string;
+}
+
+function normalizeName(nameOrNamed: NameOrNamed): string {
+  return typeof nameOrNamed === "string" ? nameOrNamed : nameOrNamed.name;
 }
