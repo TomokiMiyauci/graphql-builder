@@ -58,14 +58,19 @@ class Scope {
 export class SchemaBuilder {
   #registry = new Scope();
 
-  scalar<T, U>(
-    nameOrConfig: string | GraphQLScalarTypeConfig<T, U>,
+  scalar(name: string): ScalarType;
+  scalar<T, U>(config: GraphQLScalarTypeConfig<T, U>): ScalarType<T, U>;
+  scalar(
+    nameOrConfig: string | GraphQLScalarTypeConfig<unknown, unknown>,
   ): ScalarType {
     const name = normalizeName(nameOrConfig);
     const registry = this.#registry.getOrInsert(
       name,
       "scalar",
-      new Registry<GraphQLScalarTypeConfig<T, U>, GraphQLScalarType>(),
+      new Registry<
+        GraphQLScalarTypeConfig<unknown, unknown>,
+        GraphQLScalarType
+      >(),
     );
 
     if (typeof nameOrConfig === "object") {
@@ -75,14 +80,21 @@ export class SchemaBuilder {
     return new ScalarTypeBuilder(registry);
   }
 
-  objectType<T, U>(
-    nameOrConfig: string | ObjectTypeConfig<T, U>,
-  ): ObjectType<T, U> {
+  objectType(name: string): ObjectType<unknown, unknown>;
+  objectType<T, U, A = unknown>(
+    config: ObjectTypeConfig<T, U, A>,
+  ): ObjectType<T, U>;
+  objectType(
+    nameOrConfig: string | ObjectTypeConfig<unknown, unknown>,
+  ): ObjectType<unknown, unknown> {
     const name = normalizeName(nameOrConfig);
     const registry = this.#registry.getOrInsert(
       name,
       "object",
-      new Registry<ObjectTypeConfig<T, U>, GraphQLObjectType<T, U>>(),
+      new Registry<
+        ObjectTypeConfig<unknown, unknown>,
+        GraphQLObjectType<unknown, unknown>
+      >(),
     );
 
     if (typeof nameOrConfig === "object") {
@@ -92,6 +104,8 @@ export class SchemaBuilder {
     return new ObjectTypeBuilder(registry);
   }
 
+  inputObjectType(name: string): InputObjectType;
+  inputObjectType(config: InputObjectTypeConfig): InputObjectType;
   inputObjectType(
     nameOrConfig: string | InputObjectTypeConfig,
   ): InputObjectType {
@@ -111,6 +125,8 @@ export class SchemaBuilder {
     return inputObjectType;
   }
 
+  unionType(name: string): UnionType;
+  unionType(config: UnionTypeConfig): UnionType;
   unionType(nameOrConfig: string | UnionTypeConfig): UnionType {
     const name = normalizeName(nameOrConfig);
     const registry = this.#registry.getOrInsert(
@@ -128,6 +144,8 @@ export class SchemaBuilder {
     return union;
   }
 
+  enumType(name: string): EnumType;
+  enumType(config: GraphQLEnumTypeConfig): EnumType;
   enumType(nameOrConfig: string | GraphQLEnumTypeConfig): EnumType {
     const name = normalizeName(nameOrConfig);
     const registry = this.#registry.getOrInsert(
@@ -145,14 +163,19 @@ export class SchemaBuilder {
     return type;
   }
 
-  interfaceType<T, U>(
-    nameOrConfig: string | InterfaceTypeConfig<T, U>,
+  interfaceType(name: string): InterfaceType;
+  interfaceType<T, U>(config: InterfaceTypeConfig<T, U>): InterfaceType;
+  interfaceType(
+    nameOrConfig: string | InterfaceTypeConfig<unknown, unknown>,
   ): InterfaceType {
     const name = normalizeName(nameOrConfig);
     const registry = this.#registry.getOrInsert(
       name,
       "interface",
-      new Registry<InterfaceTypeConfig<T, U>, GraphQLInterfaceType>(),
+      new Registry<
+        InterfaceTypeConfig<unknown, unknown>,
+        GraphQLInterfaceType
+      >(),
     );
 
     if (typeof nameOrConfig === "object") {

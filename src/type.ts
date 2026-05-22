@@ -40,10 +40,10 @@ interface Builder {
   get definition(): GraphQLNamedType;
 }
 
-export interface ObjectTypeConfig<TSource, TContext> {
+export interface ObjectTypeConfig<TSource, TContext, TArgs = unknown> {
   name: string;
   description?: string;
-  fields: Record<string, FieldConfig<TSource, TContext>>;
+  fields: Record<string, FieldConfig<TSource, TContext, TArgs>>;
 }
 
 export interface InputObjectTypeConfig {
