@@ -1,14 +1,15 @@
 // deno-lint-ignore-file no-explicit-any
-import type {
-  GraphQLEnumType,
-  GraphQLEnumTypeConfig,
-  GraphQLInputObjectType,
-  GraphQLInterfaceType,
-  GraphQLNamedType,
-  GraphQLObjectType,
-  GraphQLScalarType,
-  GraphQLScalarTypeConfig,
-  GraphQLUnionType,
+import {
+  type GraphQLEnumType,
+  type GraphQLEnumTypeConfig,
+  type GraphQLInputObjectType,
+  type GraphQLInterfaceType,
+  GraphQLList,
+  type GraphQLNamedType,
+  type GraphQLObjectType,
+  type GraphQLScalarType,
+  type GraphQLScalarTypeConfig,
+  type GraphQLUnionType,
 } from "graphql";
 import type {
   EnumType,
@@ -16,9 +17,11 @@ import type {
   InputObjectTypeConfig,
   InterfaceType,
   InterfaceTypeConfig,
+  List,
   ObjectType,
   ObjectTypeConfig,
   ScalarType,
+  Type,
   UnionType,
   UnionTypeConfig,
 } from "./type.ts";
@@ -234,4 +237,15 @@ interface Named {
 
 function normalizeName(nameOrNamed: NameOrNamed): string {
   return typeof nameOrNamed === "string" ? nameOrNamed : nameOrNamed.name;
+}
+
+export function list(type: Type): List {
+  return {
+    type: "list",
+    get definition() {
+      const instance = type.definition;
+
+      return new GraphQLList(instance);
+    },
+  };
 }

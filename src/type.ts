@@ -7,10 +7,11 @@ import type {
   GraphQLInputObjectTypeConfig,
   GraphQLInputType,
   GraphQLInterfaceType,
-  GraphQLNamedType,
+  GraphQLList,
   GraphQLObjectType,
   GraphQLObjectTypeConfig,
   GraphQLScalarType,
+  GraphQLType,
   GraphQLUnionType,
   GraphQLUnionTypeConfig,
 } from "graphql";
@@ -42,7 +43,7 @@ export interface ScalarType<T = unknown, U = T> extends Builder {
 
 interface Builder {
   type: string;
-  readonly definition: GraphQLNamedType;
+  readonly definition: GraphQLType;
 }
 
 export interface ObjectTypeConfig<TSource, TContext, TArgs = unknown>
@@ -79,21 +80,37 @@ export type OutputType<T, U> =
   | EnumType
   | InterfaceType;
 
-export type InputType = InputObjectType | ScalarType;
+export type InputType =
+  | InputObjectType
+  | ScalarType
+  | EnumType
+  | List;
 
 export interface UnionType extends Builder {
   type: "union";
 
-  get definition(): GraphQLUnionType;
+  readonly definition: GraphQLUnionType;
 }
 
 export interface InterfaceType extends Builder {
   type: "interface";
 
-  get definition(): GraphQLInterfaceType;
+  readonly definition: GraphQLInterfaceType;
 }
 
-export type Type = InputType | OutputType<any, any>;
+export interface List extends Builder {
+  type: "list";
+  readonly definition: GraphQLList<GraphQLType>;
+}
+
+export type Type =
+  | ScalarType
+  | ObjectType<any, any>
+  | InterfaceType
+  | UnionType
+  | EnumType
+  | InputObjectType
+  | List;
 
 export type FieldConfigArgumentMap = Record<string, ArgumentConfig>;
 
