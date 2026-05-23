@@ -10,6 +10,7 @@ import {
   type GraphQLObjectType,
   type GraphQLScalarType,
   type GraphQLScalarTypeConfig,
+  type GraphQLType,
   type GraphQLUnionType,
 } from "graphql";
 import type {
@@ -241,7 +242,7 @@ function normalizeName(nameOrNamed: NameOrNamed): string {
   return typeof nameOrNamed === "string" ? nameOrNamed : nameOrNamed.name;
 }
 
-export function list(type: Type): List {
+export function list<T extends Type>(type: T): List<T["type"]> {
   return {
     get type() {
       const instance = type.type;
@@ -251,7 +252,7 @@ export function list(type: Type): List {
   };
 }
 
-export function nonNull(type: Type): NonNull {
+export function nonNull<T extends Type>(type: T): NonNull<T["type"]> {
   return {
     get type() {
       const instance = type.type;
