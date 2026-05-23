@@ -153,13 +153,15 @@ export class SchemaBuilder {
   }
 
   unionType(name: string): UnionType;
-  unionType(config: UnionTypeConfig): UnionType;
-  unionType(nameOrConfig: string | UnionTypeConfig): UnionType {
+  unionType<T, U>(config: UnionTypeConfig<T, U>): UnionType;
+  unionType(
+    nameOrConfig: string | UnionTypeConfig<unknown, unknown>,
+  ): UnionType {
     const name = normalizeName(nameOrConfig);
     const registry = this.#registry.getOrInsert(
       name,
       "union",
-      new Registry<UnionTypeConfig, GraphQLUnionType>(),
+      new Registry<UnionTypeConfig<unknown, unknown>, GraphQLUnionType>(),
       createUnion,
     );
 

@@ -163,8 +163,10 @@ function toInputFieldConfig(
   };
 }
 
-export class UnionTypeBuilder implements UnionType {
-  constructor(private registry: Registry<UnionTypeConfig, GraphQLUnionType>) {}
+export class UnionTypeBuilder<T, U> implements UnionType {
+  constructor(
+    private registry: Registry<UnionTypeConfig<T, U>, GraphQLUnionType>,
+  ) {}
 
   type = "union" as const;
 
@@ -271,20 +273,22 @@ function toArgumentConfig(config: ArgumentConfig): GraphQLArgumentConfig {
   };
 }
 
-function toUnionTypeConfig(
-  config: UnionTypeConfig,
-): GraphQLUnionTypeConfig<unknown, unknown> {
-  const types = config.types.map(toType);
+function toUnionTypeConfig<T, U>(
+  config: UnionTypeConfig<T, U>,
+): GraphQLUnionTypeConfig<T, U> {
+  const types = config.types.map((type) => {
+    if ("definition" in type) {
+      return type.definition;
+    } else {
+      return type;
+    }
+  });
 
   return {
     name: config.name,
     types,
     description: config.description,
   };
-}
-
-function toType<T, U>(objectType: ObjectType<T, U>): GraphQLObjectType<T, U> {
-  return objectType.definition;
 }
 
 export function createScalar(
@@ -346,8 +350,8 @@ export function createInputObject(
   return type;
 }
 
-export function createUnion(
-  registry: Registry<UnionTypeConfig, GraphQLUnionType>,
+export function createUnion<T, U>(
+  registry: Registry<UnionTypeConfig<T, U>, GraphQLUnionType>,
 ) {
   const instance = registry.instance.value;
 

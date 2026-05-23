@@ -8,6 +8,7 @@ import type {
   GraphQLObjectTypeConfig,
   GraphQLScalarType,
   GraphQLUnionType,
+  GraphQLUnionTypeConfig,
 } from "graphql";
 
 export interface ObjectType<T, U> extends Builder {
@@ -20,10 +21,9 @@ export interface InputObjectType extends Builder {
   readonly definition: GraphQLInputObjectType;
 }
 
-export interface UnionTypeConfig {
-  name: string;
-  description?: string;
-  types: readonly ObjectType<unknown, unknown>[];
+export interface UnionTypeConfig<T, U>
+  extends Omit<GraphQLUnionTypeConfig<T, U>, "types"> {
+  types: readonly (ObjectType<T, U> | GraphQLObjectType<T, U>)[];
 }
 
 export interface EnumType extends Builder {
