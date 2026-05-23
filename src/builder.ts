@@ -6,6 +6,7 @@ import {
   type GraphQLInterfaceType,
   GraphQLList,
   type GraphQLNamedType,
+  GraphQLNonNull,
   type GraphQLObjectType,
   type GraphQLScalarType,
   type GraphQLScalarTypeConfig,
@@ -18,6 +19,7 @@ import type {
   InterfaceType,
   InterfaceTypeConfig,
   List,
+  NonNull,
   ObjectType,
   ObjectTypeConfig,
   ScalarType,
@@ -108,10 +110,10 @@ export class SchemaBuilder {
     return new ScalarTypeBuilder(registry);
   }
 
-  objectType(name: string): ObjectType<unknown, unknown>;
   objectType<T, U, A = unknown>(
     config: ObjectTypeConfig<T, U, A>,
   ): ObjectType<T, U>;
+  objectType(name: string): ObjectType<unknown, unknown>;
   objectType(
     nameOrConfig: string | ObjectTypeConfig<unknown, unknown>,
   ): ObjectType<unknown, unknown> {
@@ -246,6 +248,17 @@ export function list(type: Type): List {
       const instance = type.definition;
 
       return new GraphQLList(instance);
+    },
+  };
+}
+
+export function nonNull(type: Type): NonNull {
+  return {
+    type: "non-null",
+    get definition() {
+      const instance = type.definition;
+
+      return new GraphQLNonNull(instance);
     },
   };
 }
