@@ -87,8 +87,8 @@ class Scope {
 export class SchemaBuilder {
   #registry = new Scope();
 
-  scalar(name: string): ScalarType;
   scalar<T, U>(config: GraphQLScalarTypeConfig<T, U>): ScalarType<T, U>;
+  scalar(name: string): ScalarType;
   scalar(
     nameOrConfig: string | GraphQLScalarTypeConfig<unknown, unknown>,
   ): ScalarType {
@@ -135,8 +135,8 @@ export class SchemaBuilder {
     return new ObjectTypeBuilder(registry);
   }
 
-  inputObjectType(name: string): InputObjectType;
   inputObjectType(config: InputObjectTypeConfig): InputObjectType;
+  inputObjectType(name: string): InputObjectType;
   inputObjectType(
     nameOrConfig: string | InputObjectTypeConfig,
   ): InputObjectType {
@@ -157,8 +157,8 @@ export class SchemaBuilder {
     return inputObjectType;
   }
 
-  unionType(name: string): UnionType;
   unionType<T, U>(config: UnionTypeConfig<T, U>): UnionType;
+  unionType(name: string): UnionType;
   unionType(
     nameOrConfig: string | UnionTypeConfig<unknown, unknown>,
   ): UnionType {
@@ -179,8 +179,8 @@ export class SchemaBuilder {
     return union;
   }
 
-  enumType(name: string): EnumType;
   enumType(config: GraphQLEnumTypeConfig): EnumType;
+  enumType(name: string): EnumType;
   enumType(nameOrConfig: string | GraphQLEnumTypeConfig): EnumType {
     const name = normalizeName(nameOrConfig);
     const registry = this.#registry.getOrInsert(
@@ -199,8 +199,8 @@ export class SchemaBuilder {
     return type;
   }
 
-  interfaceType(name: string): InterfaceType;
   interfaceType<T, U>(config: InterfaceTypeConfig<T, U>): InterfaceType;
+  interfaceType(name: string): InterfaceType;
   interfaceType(
     nameOrConfig: string | InterfaceTypeConfig<unknown, unknown>,
   ): InterfaceType {
