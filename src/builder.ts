@@ -243,9 +243,8 @@ function normalizeName(nameOrNamed: NameOrNamed): string {
 
 export function list(type: Type): List {
   return {
-    type: "list",
-    get definition() {
-      const instance = type.definition;
+    get type() {
+      const instance = type.type;
 
       return new GraphQLList(instance);
     },
@@ -254,9 +253,8 @@ export function list(type: Type): List {
 
 export function nonNull(type: Type): NonNull {
   return {
-    type: "non-null",
-    get definition() {
-      const instance = type.definition;
+    get type() {
+      const instance = type.type;
 
       return new GraphQLNonNull(instance);
     },

@@ -46,8 +46,6 @@ export class Registry<T, U> {
 }
 
 export class ScalarTypeBuilder<T, U> implements ScalarType {
-  type = "scalar" as const;
-
   constructor(
     private registry: Registry<
       GraphQLScalarTypeConfig<T, U>,
@@ -55,7 +53,7 @@ export class ScalarTypeBuilder<T, U> implements ScalarType {
     >,
   ) {}
 
-  get definition() {
+  get type() {
     const instance = this.registry.instance.value;
 
     if (instance) return instance;
@@ -78,9 +76,7 @@ export class ObjectTypeBuilder<T, U> implements ObjectType<T, U> {
   ) {
   }
 
-  type = "object" as const;
-
-  get definition(): GraphQLObjectType<T, U> {
+  get type(): GraphQLObjectType<T, U> {
     const instance = this.registry.instance.value;
 
     if (instance) return instance;
@@ -119,9 +115,8 @@ export class InputObjectTypeBuilder implements InputObjectType {
   constructor(
     private registry: Registry<InputObjectTypeConfig, GraphQLInputObjectType>,
   ) {}
-  type = "input-object" as const;
 
-  get definition() {
+  get type() {
     const instance = this.registry.instance.value;
 
     if (instance) return instance;
@@ -153,9 +148,7 @@ function toInputObjectTypeConfig(
 function toInputFieldConfig(
   config: InputFieldConfig,
 ): GraphQLInputFieldConfig {
-  const type = "definition" in config.type
-    ? config.type.definition
-    : config.type;
+  const type = "type" in config.type ? config.type.type : config.type;
 
   return {
     defaultValue: config.defaultValue,
@@ -170,9 +163,7 @@ export class UnionTypeBuilder<T, U> implements UnionType {
     private registry: Registry<UnionTypeConfig<T, U>, GraphQLUnionType>,
   ) {}
 
-  type = "union" as const;
-
-  get definition() {
+  get type() {
     const instance = this.registry.instance.value;
 
     if (instance) return instance;
@@ -194,9 +185,8 @@ export class EnumTypeBuilder implements EnumType {
   constructor(
     private registry: Registry<GraphQLEnumTypeConfig, GraphQLEnumType>,
   ) {}
-  type = "enum" as const;
 
-  get definition() {
+  get type() {
     const instance = this.registry.instance.value;
 
     if (instance) return instance;
@@ -218,9 +208,7 @@ export class InterfaceTypeBuilder<T, U> implements InterfaceType {
   ) {
   }
 
-  type = "interface" as const;
-
-  get definition() {
+  get type() {
     const instance = this.registry.instance.value;
 
     if (instance) return instance;
@@ -249,9 +237,7 @@ export class InterfaceTypeBuilder<T, U> implements InterfaceType {
 function toFieldConfig<T, U>(
   config: FieldConfig<T, U>,
 ): GraphQLFieldConfig<T, U> {
-  const type = "definition" in config.type
-    ? config.type.definition
-    : config.type;
+  const type = "type" in config.type ? config.type.type : config.type;
 
   const args = mapValues(config.args ?? {}, toArgumentConfig);
 
@@ -265,9 +251,7 @@ function toFieldConfig<T, U>(
 }
 
 function toArgumentConfig(config: ArgumentConfig): GraphQLArgumentConfig {
-  const type = "definition" in config.type
-    ? config.type.definition
-    : config.type;
+  const type = "type" in config.type ? config.type.type : config.type;
 
   return {
     type,
@@ -281,8 +265,8 @@ function toUnionTypeConfig<T, U>(
   config: UnionTypeConfig<T, U>,
 ): GraphQLUnionTypeConfig<T, U> {
   const types = config.types.map((type) => {
-    if ("definition" in type) {
-      return type.definition;
+    if ("type" in type) {
+      return type.type;
     } else {
       return type;
     }
