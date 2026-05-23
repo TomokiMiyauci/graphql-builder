@@ -153,7 +153,9 @@ function toInputObjectTypeConfig(
 function toInputFieldConfig(
   config: InputFieldConfig,
 ): GraphQLInputFieldConfig {
-  const type = config.type.definition;
+  const type = "definition" in config.type
+    ? config.type.definition
+    : config.type;
 
   return {
     defaultValue: config.defaultValue,
@@ -263,7 +265,9 @@ function toFieldConfig<T, U>(
 }
 
 function toArgumentConfig(config: ArgumentConfig): GraphQLArgumentConfig {
-  const type = config.type.definition;
+  const type = "definition" in config.type
+    ? config.type.definition
+    : config.type;
 
   return {
     type,
