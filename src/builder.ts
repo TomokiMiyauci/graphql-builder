@@ -4,6 +4,7 @@ import type {
   GraphQLEnumTypeConfig,
   GraphQLInputObjectType,
   GraphQLInterfaceType,
+  GraphQLNamedType,
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLScalarTypeConfig,
@@ -22,6 +23,12 @@ import type {
   UnionTypeConfig,
 } from "./type.ts";
 import {
+  createEnum,
+  createInputObject,
+  createInterface,
+  createObject,
+  createScalar,
+  createUnion,
   EnumTypeBuilder,
   InputObjectTypeBuilder,
   InterfaceTypeBuilder,
@@ -32,26 +39,43 @@ import {
 } from "./factory.ts";
 
 class Scope {
-  #map: Map<string, { registry: Registry<any, any>; group: string }> =
-    new Map();
+  #map: Map<
+    string,
+    {
+      registry: Registry<any, GraphQLNamedType>;
+      group: string;
+      get type(): GraphQLNamedType;
+    }
+  > = new Map();
 
-  getOrInsert<T, U>(
+  getOrInsert<T extends Registry<unknown, GraphQLNamedType>>(
     name: string,
     group: string,
-    registry: Registry<T, U>,
-  ): Registry<T, U> {
+    registry: T,
+    create: (registry: T) => GraphQLNamedType,
+  ): T {
     if (this.#map.has(name)) {
       const pair = this.#map.get(name)!;
 
       if (group === pair.group) {
-        return pair.registry;
+        return pair.registry as T;
       }
 
       throw new Error(`"${name}" is already defined as "${group}"`);
     } else {
-      this.#map.set(name, { registry, group });
+      this.#map.set(name, {
+        registry,
+        group,
+        get type() {
+          return create(registry);
+        },
+      });
       return registry;
     }
+  }
+
+  [Symbol.iterator]() {
+    return this.#map[Symbol.iterator]();
   }
 }
 
@@ -71,6 +95,7 @@ export class SchemaBuilder {
         GraphQLScalarTypeConfig<unknown, unknown>,
         GraphQLScalarType
       >(),
+      createScalar,
     );
 
     if (typeof nameOrConfig === "object") {
@@ -95,6 +120,7 @@ export class SchemaBuilder {
         ObjectTypeConfig<unknown, unknown>,
         GraphQLObjectType<unknown, unknown>
       >(),
+      createObject,
     );
 
     if (typeof nameOrConfig === "object") {
@@ -114,6 +140,7 @@ export class SchemaBuilder {
       name,
       "input-object",
       new Registry<InputObjectTypeConfig, GraphQLInputObjectType>(),
+      createInputObject,
     );
 
     if (typeof nameOrConfig === "object") {
@@ -133,6 +160,7 @@ export class SchemaBuilder {
       name,
       "union",
       new Registry<UnionTypeConfig, GraphQLUnionType>(),
+      createUnion,
     );
 
     if (typeof nameOrConfig === "object") {
@@ -152,6 +180,7 @@ export class SchemaBuilder {
       name,
       "enum",
       new Registry<GraphQLEnumTypeConfig, GraphQLEnumType>(),
+      createEnum,
     );
 
     if (typeof nameOrConfig === "object") {
@@ -176,6 +205,7 @@ export class SchemaBuilder {
         InterfaceTypeConfig<unknown, unknown>,
         GraphQLInterfaceType
       >(),
+      createInterface,
     );
 
     if (typeof nameOrConfig === "object") {
@@ -185,6 +215,12 @@ export class SchemaBuilder {
     const type = new InterfaceTypeBuilder(registry);
 
     return type;
+  }
+
+  types(): GraphQLNamedType[] {
+    const array = [...this.#registry].map(([_, { type }]) => type);
+
+    return array;
   }
 }
 

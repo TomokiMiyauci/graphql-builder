@@ -284,3 +284,125 @@ function toUnionTypeConfig(
 function toType<T, U>(objectType: ObjectType<T, U>): GraphQLObjectType<T, U> {
   return objectType.definition;
 }
+
+export function createScalar(
+  registry: Registry<
+    GraphQLScalarTypeConfig<unknown, unknown>,
+    GraphQLScalarType
+  >,
+): GraphQLScalarType {
+  const instance = registry.instance.value;
+
+  if (instance) return instance;
+
+  const config = registry.config.value;
+
+  if (!config) throw new Error(`not found`);
+
+  const type = new GraphQLScalarType(config);
+
+  registry.instance.set(type);
+
+  return type;
+}
+
+export function createObject<T, U>(
+  registry: Registry<ObjectTypeConfig<T, U>, GraphQLObjectType<T, U>>,
+): GraphQLObjectType<T, U> {
+  const instance = registry.instance.value;
+
+  if (instance) return instance;
+
+  const raw = registry.config.value;
+
+  if (!raw) throw new Error(`not found`);
+
+  const config = toObjectTypeConfig(raw);
+  const type = new GraphQLObjectType(config);
+
+  registry.instance.set(type);
+
+  return type;
+}
+
+export function createInputObject(
+  registry: Registry<InputObjectTypeConfig, GraphQLInputObjectType>,
+): GraphQLInputObjectType {
+  const instance = registry.instance.value;
+
+  if (instance) return instance;
+
+  const raw = registry.config.value;
+
+  if (!raw) throw new Error();
+
+  const config = toInputObjectTypeConfig(raw);
+  const type = new GraphQLInputObjectType(config);
+
+  registry.instance.set(type);
+
+  return type;
+}
+
+export function createUnion(
+  registry: Registry<UnionTypeConfig, GraphQLUnionType>,
+) {
+  const instance = registry.instance.value;
+
+  if (instance) return instance;
+
+  const raw = registry.config.value;
+
+  if (!raw) throw new Error();
+
+  const config = toUnionTypeConfig(raw);
+  const type = new GraphQLUnionType(config);
+
+  registry.instance.set(type);
+
+  return type;
+}
+
+export function createEnum(
+  registry: Registry<GraphQLEnumTypeConfig, GraphQLEnumType>,
+) {
+  const instance = registry.instance.value;
+
+  if (instance) return instance;
+
+  const config = registry.config.value;
+
+  if (!config) throw new Error();
+
+  const type = new GraphQLEnumType(config);
+  registry.instance.set(type);
+
+  return type;
+}
+
+export function createInterface<T, U>(
+  registry: Registry<ObjectTypeConfig<T, U>, GraphQLInterfaceType>,
+) {
+  const instance = registry.instance.value;
+
+  if (instance) return instance;
+
+  const config = registry.config.value;
+
+  if (!config) throw new Error(`not found`);
+
+  const type = new GraphQLInterfaceType({
+    name: config.name,
+    fields: () => {
+      const fields = mapValues(
+        config.fields,
+        toFieldConfig,
+      );
+
+      return fields;
+    },
+  });
+  registry.instance.set(type);
+
+  return type;
+}
