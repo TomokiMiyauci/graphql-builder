@@ -9,6 +9,7 @@ import type {
   ObjectType,
   ObjectTypeConfig,
   ScalarType,
+  Type,
   UnionType,
   UnionTypeConfig,
 } from "./type.ts";
@@ -25,10 +26,12 @@ import {
   type GraphQLObjectTypeConfig,
   GraphQLScalarType,
   type GraphQLScalarTypeConfig,
+  type GraphQLType,
   GraphQLUnionType,
   type GraphQLUnionTypeConfig,
 } from "graphql";
 import { mapValues } from "@std/collections";
+import { evolve } from "./util.ts";
 
 class Box<T> {
   #value: T | undefined;
@@ -72,18 +75,13 @@ export class ObjectTypeBuilder<T, U> implements ObjectType<T, U> {
 function toObjectTypeConfig<T, U>(
   config: ObjectTypeConfig<T, U>,
 ): GraphQLObjectTypeConfig<T, U> {
-  return {
-    name: config.name,
-    fields: () => {
-      const fields = mapValues(
-        config.fields,
+  return evolve(config, {
+    fields: (fields) => () =>
+      mapValues(
+        fields,
         toFieldConfig,
-      );
-
-      return fields;
-    },
-    description: config.description,
-  };
+      ),
+  });
 }
 
 export class InputObjectTypeBuilder implements InputObjectType {
@@ -99,25 +97,17 @@ export class InputObjectTypeBuilder implements InputObjectType {
 function toInputObjectTypeConfig(
   config: InputObjectTypeConfig,
 ): GraphQLInputObjectTypeConfig {
-  const fields = mapValues(config.fields, toInputFieldConfig);
-
-  return {
-    name: config.name,
-    fields,
-  };
+  return evolve(config, {
+    fields: (fields) => () => mapValues(fields, toInputFieldConfig),
+  });
 }
 
 function toInputFieldConfig(
   config: InputFieldConfig,
 ): GraphQLInputFieldConfig {
-  const type = "type" in config.type ? config.type.type : config.type;
-
-  return {
-    defaultValue: config.defaultValue,
-    deprecationReason: config.deprecationReason,
-    description: config.description,
+  return evolve(config, {
     type,
-  };
+  });
 }
 
 export class UnionTypeBuilder<T, U> implements UnionType {
@@ -154,26 +144,14 @@ export class InterfaceTypeBuilder<T, U> implements InterfaceType {
 function toFieldConfig<T, U>(
   config: FieldConfig<T, U>,
 ): GraphQLFieldConfig<T, U> {
-  const { type: _type, args: _args, ...rest } = config;
-  const type = "type" in _type ? _type.type : _type;
-  const args = mapValues(_args ?? {}, toArgumentConfig);
-
-  return {
-    ...rest,
+  return evolve(config, {
     type,
-    args,
-  };
+    args: (args) => mapValues(args ?? {}, toArgumentConfig),
+  });
 }
 
 function toArgumentConfig(config: ArgumentConfig): GraphQLArgumentConfig {
-  const type = "type" in config.type ? config.type.type : config.type;
-
-  return {
-    type,
-    defaultValue: config.defaultValue,
-    deprecationReason: config.deprecationReason,
-    description: config.description,
-  };
+  return evolve(config, { type });
 }
 
 function toUnionTypeConfig<T, U>(
@@ -314,4 +292,11 @@ export function createInterface<T, U>(
   registry.instance.set(type);
 
   return type;
+}
+
+function type<T extends Type | GraphQLType>(
+  value: T,
+): T extends Type ? T["type"] : T {
+  // deno-lint-ignore no-explicit-any
+  return "type" in value ? value.type as any : value as any;
 }
