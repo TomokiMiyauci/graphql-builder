@@ -12,12 +12,12 @@ import type {
 
 export interface ObjectType<T, U> extends Builder {
   type: "object";
-  get definition(): GraphQLObjectType<T, U>;
+  readonly definition: GraphQLObjectType<T, U>;
 }
 
 export interface InputObjectType extends Builder {
   type: "input-object";
-  get definition(): GraphQLInputObjectType;
+  readonly definition: GraphQLInputObjectType;
 }
 
 export interface UnionTypeConfig {
@@ -28,17 +28,17 @@ export interface UnionTypeConfig {
 
 export interface EnumType extends Builder {
   type: "enum";
-  get definition(): GraphQLEnumType;
+  readonly definition: GraphQLEnumType;
 }
 
 export interface ScalarType<T = unknown, U = T> extends Builder {
   type: "scalar";
-  get definition(): GraphQLScalarType<T, U>;
+  readonly definition: GraphQLScalarType<T, U>;
 }
 
 interface Builder {
   type: string;
-  get definition(): GraphQLNamedType;
+  readonly definition: GraphQLNamedType;
 }
 
 export interface ObjectTypeConfig<TSource, TContext, TArgs = unknown>
