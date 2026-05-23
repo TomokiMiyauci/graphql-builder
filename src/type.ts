@@ -1,10 +1,11 @@
 import type {
   GraphQLEnumType,
-  GraphQLFieldResolver,
+  GraphQLFieldConfig,
   GraphQLInputObjectType,
   GraphQLInterfaceType,
   GraphQLNamedType,
   GraphQLObjectType,
+  GraphQLObjectTypeConfig,
   GraphQLScalarType,
   GraphQLUnionType,
 } from "graphql";
@@ -40,9 +41,8 @@ interface Builder {
   get definition(): GraphQLNamedType;
 }
 
-export interface ObjectTypeConfig<TSource, TContext, TArgs = unknown> {
-  name: string;
-  description?: string;
+export interface ObjectTypeConfig<TSource, TContext, TArgs = unknown>
+  extends Omit<GraphQLObjectTypeConfig<TSource, TContext>, "fields"> {
   fields: Record<string, FieldConfig<TSource, TContext, TArgs>>;
 }
 
@@ -57,11 +57,9 @@ export interface InterfaceTypeConfig<TSource, TContext> {
   fields: Record<string, FieldConfig<TSource, TContext>>;
 }
 
-export interface FieldConfig<T, U, TArgs = unknown> {
-  description?: string;
-  type: OutputType<T, U>;
-  resolve?: GraphQLFieldResolver<T, U, TArgs>;
-  deprecationReason?: string;
+export interface FieldConfig<T, U, TArgs = unknown>
+  extends Omit<GraphQLFieldConfig<T, U, TArgs>, "type" | "args"> {
+  type: OutputType<T, U> | GraphQLFieldConfig<T, U, TArgs>["type"];
   args?: FieldConfigArgumentMap;
 }
 

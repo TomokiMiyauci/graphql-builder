@@ -245,7 +245,9 @@ export class InterfaceTypeBuilder<T, U> implements InterfaceType {
 function toFieldConfig<T, U>(
   config: FieldConfig<T, U>,
 ): GraphQLFieldConfig<T, U> {
-  const type = config.type.definition;
+  const type = "definition" in config.type
+    ? config.type.definition
+    : config.type;
 
   const args = mapValues(config.args ?? {}, toArgumentConfig);
 
