@@ -18,11 +18,11 @@ import type {
   GraphQLUnionTypeConfig,
 } from "graphql";
 
-export interface ObjectType<T, U> extends Builder {
+export interface ObjectType<T, U> extends BaseType {
   readonly type: GraphQLObjectType<T, U>;
 }
 
-export interface InputObjectType extends Builder {
+export interface InputObjectType extends BaseType {
   readonly type: GraphQLInputObjectType;
 }
 
@@ -31,15 +31,15 @@ export interface UnionTypeConfig<T, U>
   types: readonly (ObjectType<T, U> | GraphQLObjectType<T, U>)[];
 }
 
-export interface EnumType extends Builder {
+export interface EnumType extends BaseType {
   readonly type: GraphQLEnumType;
 }
 
-export interface ScalarType<T = unknown, U = T> extends Builder {
+export interface ScalarType<T = unknown, U = T> extends BaseType {
   readonly type: GraphQLScalarType<T, U>;
 }
 
-interface Builder {
+interface BaseType {
   readonly type: GraphQLType;
 }
 
@@ -86,19 +86,19 @@ export type InputType =
   | List<GraphQLInputType>
   | NonNull<GraphQLInputType>;
 
-export interface UnionType extends Builder {
+export interface UnionType extends BaseType {
   readonly type: GraphQLUnionType;
 }
 
-export interface InterfaceType extends Builder {
+export interface InterfaceType extends BaseType {
   readonly type: GraphQLInterfaceType;
 }
 
-export interface List<T extends GraphQLType> extends Builder {
+export interface List<T extends GraphQLType> extends BaseType {
   readonly type: GraphQLList<T>;
 }
 
-export interface NonNull<T extends GraphQLType> extends Builder {
+export interface NonNull<T extends GraphQLType> extends BaseType {
   readonly type: GraphQLNonNull<T>;
 }
 
