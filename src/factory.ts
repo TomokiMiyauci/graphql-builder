@@ -31,7 +31,7 @@ import {
   type GraphQLUnionTypeConfig,
 } from "graphql";
 import { mapValues } from "@std/collections";
-import { evolve } from "./util.ts";
+import { evolve } from "@miyauci/utils";
 
 class Box<T> {
   #value: T | undefined;

@@ -3,7 +3,7 @@ export function evolve<
   E extends { [k in keyof T]: unknown } = T,
 >(
   data: T,
-  mapper: EvolverFromInputToOutput<T, E>,
+  mapper: Mapper<T, E>,
 ): E {
   const out: T = { ...data };
 
@@ -18,9 +18,9 @@ export function evolve<
   return out as any;
 }
 
-type EvolverFromInputToOutput<
+export type Mapper<
   Input extends object,
-  Output extends Record<keyof Input, unknown>,
+  Output extends { [k in keyof Input]: unknown },
 > =
   & {
     [k in keyof Input]?: (arg: Input[k]) => Output[k];

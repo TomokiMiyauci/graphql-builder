@@ -1,7 +1,9 @@
 {
   "name": "@miyauci/graphql-builder",
+  "exports": "./src/mod.ts",
   "imports": {
     "@std/collections": "jsr:@std/collections@^1.1.7",
     "graphql": "npm:graphql@^16.14.0"
-  }
+  },
+  "workspace": ["packages/*"]
 }
