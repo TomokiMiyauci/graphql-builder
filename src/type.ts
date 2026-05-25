@@ -18,7 +18,8 @@ import type {
   GraphQLUnionTypeConfig,
 } from "graphql";
 
-export interface ObjectType<T, U> extends BaseType {
+// deno-lint-ignore no-explicit-any
+export interface ObjectType<T = any, U = any> extends BaseType {
   readonly type: GraphQLObjectType<T, U>;
 }
 
@@ -104,7 +105,7 @@ export interface NonNull<T extends GraphQLType> extends BaseType {
 
 export type Type =
   | ScalarType
-  | ObjectType<any, any>
+  | ObjectType
   | InterfaceType
   | UnionType
   | EnumType
