@@ -10,10 +10,10 @@ import {
   type GraphQLObjectType,
   type GraphQLScalarType,
   type GraphQLScalarTypeConfig,
-  type GraphQLType,
   type GraphQLUnionType,
 } from "graphql";
 import type {
+  BaseNamedType,
   EnumType,
   InputObjectType,
   InputObjectTypeConfig,
@@ -85,8 +85,25 @@ class Scope {
   }
 }
 
+class UnoverwritableMap<T, U> extends Map<T, U> {
+  /**
+   * @throws {Error} If the item already exists.
+   */
+  override set(key: T, value: U): this {
+    if (this.has(key)) {
+      throw new Error(`"${key}" is already defined`);
+    }
+
+    return super.set(key, value);
+  }
+}
+
 export class SchemaBuilder {
-  #registry = new Scope();
+  constructor() {
+  }
+  #lock = new Scope();
+
+  #registry: Map<string, BaseNamedType> = new UnoverwritableMap();
 
   scalar<T, U>(config: GraphQLScalarTypeConfig<T, U>): ScalarType<T, U>;
   scalar(name: string): ScalarType;
@@ -94,7 +111,7 @@ export class SchemaBuilder {
     nameOrConfig: string | GraphQLScalarTypeConfig<unknown, unknown>,
   ): ScalarType {
     const name = normalizeName(nameOrConfig);
-    const registry = this.#registry.getOrInsert(
+    const registry = this.#lock.getOrInsert(
       name,
       "scalar",
       new Registry<
@@ -103,12 +120,14 @@ export class SchemaBuilder {
       >(),
       createScalar,
     );
+    const builder = new ScalarTypeBuilder(registry);
 
     if (typeof nameOrConfig === "object") {
       registry.config.set(nameOrConfig);
+      this.#set(name, builder);
     }
 
-    return new ScalarTypeBuilder(registry);
+    return builder;
   }
 
   objectType<T, U, A = unknown>(
@@ -119,7 +138,7 @@ export class SchemaBuilder {
     nameOrConfig: string | ObjectTypeConfig<unknown, unknown>,
   ): ObjectType<unknown, unknown> {
     const name = normalizeName(nameOrConfig);
-    const registry = this.#registry.getOrInsert(
+    const registry = this.#lock.getOrInsert(
       name,
       "object",
       new Registry<
@@ -128,12 +147,14 @@ export class SchemaBuilder {
       >(),
       createObject,
     );
+    const builder = new ObjectTypeBuilder(registry);
 
     if (typeof nameOrConfig === "object") {
       registry.config.set(nameOrConfig);
+      this.#set(name, builder);
     }
 
-    return new ObjectTypeBuilder(registry);
+    return builder;
   }
 
   inputObjectType(config: InputObjectTypeConfig): InputObjectType;
@@ -142,20 +163,20 @@ export class SchemaBuilder {
     nameOrConfig: string | InputObjectTypeConfig,
   ): InputObjectType {
     const name = normalizeName(nameOrConfig);
-    const registry = this.#registry.getOrInsert(
+    const registry = this.#lock.getOrInsert(
       name,
       "input-object",
       new Registry<InputObjectTypeConfig, GraphQLInputObjectType>(),
       createInputObject,
     );
+    const builder = new InputObjectTypeBuilder(registry);
 
     if (typeof nameOrConfig === "object") {
       registry.config.set(nameOrConfig);
+      this.#set(name, builder);
     }
 
-    const inputObjectType = new InputObjectTypeBuilder(registry);
-
-    return inputObjectType;
+    return builder;
   }
 
   unionType<T, U>(config: UnionTypeConfig<T, U>): UnionType;
@@ -164,40 +185,40 @@ export class SchemaBuilder {
     nameOrConfig: string | UnionTypeConfig<unknown, unknown>,
   ): UnionType {
     const name = normalizeName(nameOrConfig);
-    const registry = this.#registry.getOrInsert(
+    const registry = this.#lock.getOrInsert(
       name,
       "union",
       new Registry<UnionTypeConfig<unknown, unknown>, GraphQLUnionType>(),
       createUnion,
     );
+    const builder = new UnionTypeBuilder(registry);
 
     if (typeof nameOrConfig === "object") {
       registry.config.set(nameOrConfig);
+      this.#set(name, builder);
     }
 
-    const union = new UnionTypeBuilder(registry);
-
-    return union;
+    return builder;
   }
 
   enumType(config: GraphQLEnumTypeConfig): EnumType;
   enumType(name: string): EnumType;
   enumType(nameOrConfig: string | GraphQLEnumTypeConfig): EnumType {
     const name = normalizeName(nameOrConfig);
-    const registry = this.#registry.getOrInsert(
+    const registry = this.#lock.getOrInsert(
       name,
       "enum",
       new Registry<GraphQLEnumTypeConfig, GraphQLEnumType>(),
       createEnum,
     );
+    const builder = new EnumTypeBuilder(registry);
 
     if (typeof nameOrConfig === "object") {
       registry.config.set(nameOrConfig);
+      this.#set(name, builder);
     }
 
-    const type = new EnumTypeBuilder(registry);
-
-    return type;
+    return builder;
   }
 
   interfaceType<T, U>(config: InterfaceTypeConfig<T, U>): InterfaceType;
@@ -206,7 +227,7 @@ export class SchemaBuilder {
     nameOrConfig: string | InterfaceTypeConfig<unknown, unknown>,
   ): InterfaceType {
     const name = normalizeName(nameOrConfig);
-    const registry = this.#registry.getOrInsert(
+    const registry = this.#lock.getOrInsert(
       name,
       "interface",
       new Registry<
@@ -215,20 +236,31 @@ export class SchemaBuilder {
       >(),
       createInterface,
     );
+    const builder = new InterfaceTypeBuilder(registry);
 
     if (typeof nameOrConfig === "object") {
       registry.config.set(nameOrConfig);
+      this.#set(name, builder);
     }
 
-    const type = new InterfaceTypeBuilder(registry);
-
-    return type;
+    return builder;
   }
 
   types(): GraphQLNamedType[] {
-    const array = [...this.#registry].map(([_, { type }]) => type);
+    const array = this.#registry.values().map(({ type }) => type).toArray();
 
     return array;
+  }
+
+  /**
+   * @throws {Error}
+   */
+  #set(name: string, type: BaseNamedType): void {
+    try {
+      this.#registry.set(name, type);
+    } catch {
+      throw new Error(`"${name}" is already defined`);
+    }
   }
 }
 

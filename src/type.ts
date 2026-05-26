@@ -8,6 +8,7 @@ import type {
   GraphQLInputType,
   GraphQLInterfaceType,
   GraphQLList,
+  GraphQLNamedType,
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLObjectTypeConfig,
@@ -40,8 +41,12 @@ export interface ScalarType<T = unknown, U = T> extends BaseType {
   readonly type: GraphQLScalarType<T, U>;
 }
 
-interface BaseType {
+export interface BaseType {
   readonly type: GraphQLType;
+}
+
+export interface BaseNamedType extends BaseType {
+  readonly type: GraphQLNamedType;
 }
 
 export interface ObjectTypeConfig<TSource, TContext, TArgs = unknown>
