@@ -68,6 +68,29 @@ function getType(named: GraphQLNamedType): TypeKey {
   throw new Error("unreachable");
 }
 
+function getConstructorName(key: TypeKey): string {
+  switch (key) {
+    case "object": {
+      return "GraphQLObjectType";
+    }
+    case "scalar": {
+      return "GrpahQLScalarType";
+    }
+    case "enum": {
+      return "GraphQLEnumType";
+    }
+    case "union": {
+      return "GraphQLUnionType";
+    }
+    case "inputObject": {
+      return "GraphQLInputObjectType";
+    }
+    case "interface": {
+      return "GraphQLInterfaceType";
+    }
+  }
+}
+
 export class SchemaBuilder {
   constructor(options?: BuilderOptions) {
     if (options?.types) {
@@ -138,7 +161,9 @@ export class SchemaBuilder {
 
     if (this.#typeRegistry.has(name)) {
       if (typeKey !== type) {
-        throw new Error(`"${name}" already exists`);
+        const constructorName = getConstructorName(type);
+
+        throw new Error(`"${name}" already referenced as ${constructorName}`);
       }
     } else {
       this.#typeRegistry.set(name, type);
@@ -154,7 +179,11 @@ export class SchemaBuilder {
     const definition = this.#map.get(lock.name);
 
     if (!definition) {
-      throw new Error(`"${lock.name}" is referenced but not implemented`);
+      const constructorName = getConstructorName(lock.typeKey);
+
+      throw new Error(
+        `"${lock.name}" is referenced as ${constructorName}, but not implemented`,
+      );
     }
 
     return definition.type as TypeMap[T];
@@ -162,7 +191,9 @@ export class SchemaBuilder {
 
   #set<T extends TypeKey>(lock: Lock<T>, builder: Builder): void {
     if (this.#map.has(lock.name)) {
-      throw new Error(`"${lock.name}" already exists`);
+      const constructorName = getConstructorName(lock.typeKey);
+
+      throw new Error(`"${lock.name}" already exists as ${constructorName}`);
     }
 
     const cache = this.#cache;
