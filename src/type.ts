@@ -123,3 +123,7 @@ export type FieldConfigArgumentMap = Record<string, ArgumentConfig>;
 export interface ArgumentConfig extends Omit<GraphQLArgumentConfig, "type"> {
   type: InputType | GraphQLInputType;
 }
+
+export interface Builder {
+  build(): GraphQLNamedType;
+}

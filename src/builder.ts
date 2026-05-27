@@ -1,19 +1,14 @@
 import {
-  GraphQLEnumType,
   type GraphQLEnumTypeConfig,
-  GraphQLInputObjectType,
-  GraphQLInterfaceType,
   GraphQLList,
   type GraphQLNamedType,
   GraphQLNonNull,
-  GraphQLObjectType,
-  GraphQLScalarType,
   type GraphQLScalarTypeConfig,
-  GraphQLUnionType,
   isScalarType,
 } from "graphql";
 import type {
   BaseNamedType,
+  Builder,
   EnumType,
   InputObjectType,
   InputObjectTypeConfig,
@@ -29,20 +24,18 @@ import type {
   UnionTypeConfig,
 } from "./type.ts";
 import {
-  toInputObjectTypeConfig,
-  toInterfaceTypeConfig,
-  toObjectTypeConfig,
-  toUnionTypeConfig,
+  EnumTypeBuilder,
+  InputObjectTypeBuilder,
+  InterfaceTypeBuilder,
+  ObjectTypeBuilder,
+  ScalarTypeBuilder,
+  UnionTypeBuilder,
 } from "./factory.ts";
 import { isObjectType } from "graphql";
 import { isInputObjectType } from "graphql";
 import { isUnionType } from "graphql";
 import { isEnumType } from "graphql";
 import { isInterfaceType } from "graphql";
-
-interface Builder {
-  build(): GraphQLNamedType;
-}
 
 export interface BuilderOptions {
   types?: GraphQLNamedType[];
@@ -93,11 +86,7 @@ export class SchemaBuilder {
     const get = this.#get.bind(this);
 
     if (isNamed(nameOrConfig)) {
-      this.#set(name, {
-        build() {
-          return new GraphQLScalarType(nameOrConfig);
-        },
-      });
+      this.#set(name, new ScalarTypeBuilder(nameOrConfig));
     }
 
     return {
@@ -122,12 +111,7 @@ export class SchemaBuilder {
     const get = this.#get.bind(this);
 
     if (isNamed(nameOrConfig)) {
-      this.#set(name, {
-        build() {
-          const config = toObjectTypeConfig(nameOrConfig);
-          return new GraphQLObjectType(config);
-        },
-      });
+      this.#set(name, new ObjectTypeBuilder(nameOrConfig));
     }
 
     return {
@@ -150,12 +134,7 @@ export class SchemaBuilder {
     const get = this.#get.bind(this);
 
     if (isNamed(nameOrConfig)) {
-      this.#set(name, {
-        build() {
-          const config = toInputObjectTypeConfig(nameOrConfig);
-          return new GraphQLInputObjectType(config);
-        },
-      });
+      this.#set(name, new InputObjectTypeBuilder(nameOrConfig));
     }
 
     return {
@@ -178,12 +157,7 @@ export class SchemaBuilder {
     const get = this.#get.bind(this);
 
     if (isNamed(nameOrConfig)) {
-      this.#set(name, {
-        build() {
-          const config = toUnionTypeConfig(nameOrConfig);
-          return new GraphQLUnionType(config);
-        },
-      });
+      this.#set(name, new UnionTypeBuilder(nameOrConfig));
     }
 
     return {
@@ -204,11 +178,7 @@ export class SchemaBuilder {
     const get = this.#get.bind(this);
 
     if (isNamed(nameOrConfig)) {
-      this.#set(name, {
-        build() {
-          return new GraphQLEnumType(nameOrConfig);
-        },
-      });
+      this.#set(name, new EnumTypeBuilder(nameOrConfig));
     }
 
     return {
@@ -231,12 +201,7 @@ export class SchemaBuilder {
     const get = this.#get.bind(this);
 
     if (isNamed(nameOrConfig)) {
-      this.#set(name, {
-        build() {
-          const config = toInterfaceTypeConfig(nameOrConfig);
-          return new GraphQLInterfaceType(config);
-        },
-      });
+      this.#set(name, new InterfaceTypeBuilder(nameOrConfig));
     }
 
     return {
