@@ -6,6 +6,7 @@ import type {
   InputObjectType,
   InputObjectTypeConfig,
   InterfaceType,
+  InterfaceTypeConfig,
   ObjectType,
   ObjectTypeConfig,
   ScalarType,
@@ -22,6 +23,7 @@ import {
   GraphQLInputObjectType,
   type GraphQLInputObjectTypeConfig,
   GraphQLInterfaceType,
+  type GraphQLInterfaceTypeConfig,
   GraphQLObjectType,
   type GraphQLObjectTypeConfig,
   GraphQLScalarType,
@@ -72,7 +74,7 @@ export class ObjectTypeBuilder<T, U> implements ObjectType<T, U> {
   }
 }
 
-function toObjectTypeConfig<T, U>(
+export function toObjectTypeConfig<T, U>(
   config: ObjectTypeConfig<T, U>,
 ): GraphQLObjectTypeConfig<T, U> {
   return evolve(config, {
@@ -94,7 +96,7 @@ export class InputObjectTypeBuilder implements InputObjectType {
   }
 }
 
-function toInputObjectTypeConfig(
+export function toInputObjectTypeConfig(
   config: InputObjectTypeConfig,
 ): GraphQLInputObjectTypeConfig {
   return evolve(config, {
@@ -154,7 +156,7 @@ function toArgumentConfig(config: ArgumentConfig): GraphQLArgumentConfig {
   return evolve(config, { type });
 }
 
-function toUnionTypeConfig<T, U>(
+export function toUnionTypeConfig<T, U>(
   config: UnionTypeConfig<T, U>,
 ): GraphQLUnionTypeConfig<T, U> {
   const types = config.types.map((type) => {
@@ -292,6 +294,22 @@ export function createInterface<T, U>(
   registry.instance.set(type);
 
   return type;
+}
+
+export function toInterfaceTypeConfig<T, U>(
+  config: InterfaceTypeConfig<T, U>,
+): GraphQLInterfaceTypeConfig<T, U> {
+  return {
+    name: config.name,
+    fields: () => {
+      const fields = mapValues(
+        config.fields,
+        toFieldConfig,
+      );
+
+      return fields;
+    },
+  };
 }
 
 function type<T extends Type | GraphQLType>(
