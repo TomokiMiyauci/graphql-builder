@@ -31,18 +31,30 @@ import {
   ScalarTypeBuilder,
   UnionTypeBuilder,
 } from "./factory.ts";
-import { isObjectType } from "graphql";
-import { isInputObjectType } from "graphql";
-import { isUnionType } from "graphql";
-import { isEnumType } from "graphql";
-import { isInterfaceType } from "graphql";
+import {
+  isEnumType,
+  isInputObjectType,
+  isInterfaceType,
+  isObjectType,
+  isUnionType,
+} from "graphql";
+import { UnoverwriteableMap } from "./util.ts";
 
 export interface BuilderOptions {
   types?: GraphQLNamedType[];
 }
 
 export class SchemaBuilder {
-  constructor() {
+  constructor(options?: BuilderOptions) {
+    if (options?.types) {
+      for (const type of options.types) {
+        this.#set(type.name, {
+          build() {
+            return type;
+          },
+        });
+      }
+    }
   }
 
   #get(name: string): GraphQLNamedType {
@@ -52,9 +64,12 @@ export class SchemaBuilder {
       return builder.type;
     }
 
-    throw new Error("not implemented");
+    throw new Error(`"${name}" is referenced but not implemented`);
   }
 
+  /**
+   * @throws {Error}
+   */
   #set(name: string, builder: Builder): void {
     const cached = this.#cache;
     const definition = {
@@ -71,14 +86,18 @@ export class SchemaBuilder {
       },
     };
 
-    this.#map.set(name, definition);
+    try {
+      this.#map.set(name, definition);
+    } catch {
+      throw new Error(`"${name}" already exists`);
+    }
   }
 
-  #map: Map<string, BaseNamedType> = new Map();
+  #map: Map<string, BaseNamedType> = new UnoverwriteableMap();
   #cache: Map<string, GraphQLNamedType> = new Map();
 
+  scalar<T, U>(config: GraphQLScalarTypeConfig<T, U>): ScalarType<T, U>;
   scalar(name: string): ScalarType;
-  scalar(config: GraphQLScalarTypeConfig<unknown, unknown>): ScalarType;
   scalar(
     nameOrConfig: string | GraphQLScalarTypeConfig<unknown, unknown>,
   ): ScalarType {
