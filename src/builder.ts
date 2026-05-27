@@ -1,10 +1,15 @@
 import {
+  GraphQLEnumType,
   type GraphQLEnumTypeConfig,
+  GraphQLInputObjectType,
+  GraphQLInterfaceType,
   GraphQLList,
   type GraphQLNamedType,
   GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLScalarType,
   type GraphQLScalarTypeConfig,
-  isScalarType,
+  GraphQLUnionType,
 } from "graphql";
 import type {
   BaseNamedType,
@@ -31,24 +36,46 @@ import {
   ScalarTypeBuilder,
   UnionTypeBuilder,
 } from "./factory.ts";
-import {
-  isEnumType,
-  isInputObjectType,
-  isInterfaceType,
-  isObjectType,
-  isUnionType,
-} from "graphql";
-import { UnoverwriteableMap } from "./util.ts";
 
 export interface BuilderOptions {
   types?: GraphQLNamedType[];
+}
+
+interface TypeMap {
+  object: GraphQLObjectType;
+  scalar: GraphQLScalarType;
+  enum: GraphQLEnumType;
+  union: GraphQLUnionType;
+  inputObject: GraphQLInputObjectType;
+  interface: GraphQLInterfaceType;
+}
+
+type TypeKey = keyof TypeMap;
+
+interface Lock<T extends TypeKey> {
+  readonly name: string;
+  readonly typeKey: T;
+}
+
+function getType(named: GraphQLNamedType): TypeKey {
+  if (named instanceof GraphQLObjectType) return "object";
+  if (named instanceof GraphQLScalarType) return "scalar";
+  if (named instanceof GraphQLEnumType) return "enum";
+  if (named instanceof GraphQLUnionType) return "union";
+  if (named instanceof GraphQLInputObjectType) return "inputObject";
+  if (named instanceof GraphQLInterfaceType) return "interface";
+
+  throw new Error("unreachable");
 }
 
 export class SchemaBuilder {
   constructor(options?: BuilderOptions) {
     if (options?.types) {
       for (const type of options.types) {
-        this.#set(type.name, {
+        const name = getType(type);
+        const lock = this.#getLock(type.name, name);
+
+        this.#set(lock, {
           build() {
             return type;
           },
@@ -57,64 +84,22 @@ export class SchemaBuilder {
     }
   }
 
-  #get(name: string): GraphQLNamedType {
-    const builder = this.#map.get(name);
-
-    if (builder) {
-      return builder.type;
-    }
-
-    throw new Error(`"${name}" is referenced but not implemented`);
-  }
-
-  /**
-   * @throws {Error}
-   */
-  #set(name: string, builder: Builder): void {
-    const cached = this.#cache;
-    const definition = {
-      get type() {
-        const instance = cached.get(name);
-
-        if (instance) return instance;
-
-        const type = builder.build();
-
-        cached.set(name, type);
-
-        return type;
-      },
-    };
-
-    try {
-      this.#map.set(name, definition);
-    } catch {
-      throw new Error(`"${name}" already exists`);
-    }
-  }
-
-  #map: Map<string, BaseNamedType> = new UnoverwriteableMap();
-  #cache: Map<string, GraphQLNamedType> = new Map();
-
   scalar<T, U>(config: GraphQLScalarTypeConfig<T, U>): ScalarType<T, U>;
   scalar(name: string): ScalarType;
   scalar(
     nameOrConfig: string | GraphQLScalarTypeConfig<unknown, unknown>,
   ): ScalarType {
     const name = normalizeName(nameOrConfig);
+    const lock = this.#getLock(name, "scalar");
     const get = this.#get.bind(this);
 
     if (isNamed(nameOrConfig)) {
-      this.#set(name, new ScalarTypeBuilder(nameOrConfig));
+      this.#set(lock, new ScalarTypeBuilder(nameOrConfig));
     }
 
     return {
       get type() {
-        const type = get(name);
-
-        if (isScalarType(type)) return type;
-
-        throw new Error();
+        return get(lock);
       },
     };
   }
@@ -127,21 +112,77 @@ export class SchemaBuilder {
     nameOrConfig: string | ObjectTypeConfig<unknown, unknown>,
   ): ObjectType<unknown, unknown> {
     const name = normalizeName(nameOrConfig);
-    const get = this.#get.bind(this);
+    const lock = this.#getLock(name, "object");
 
     if (isNamed(nameOrConfig)) {
-      this.#set(name, new ObjectTypeBuilder(nameOrConfig));
+      this.#set(lock, new ObjectTypeBuilder(nameOrConfig));
     }
+
+    const get = this.#get.bind(this);
 
     return {
       get type() {
-        const type = get(name);
-
-        if (isObjectType(type)) return type;
-
-        throw new Error();
+        return get(lock);
       },
     };
+  }
+
+  #cache: Map<string, GraphQLNamedType> = new Map();
+
+  #map: Map<string, BaseNamedType> = new Map();
+
+  #typeRegistry: Map<string, TypeKey> = new Map();
+
+  #getLock<T extends TypeKey>(name: string, type: T): Lock<T> {
+    const typeKey = this.#typeRegistry.get(name);
+
+    if (this.#typeRegistry.has(name)) {
+      if (typeKey !== type) {
+        throw new Error(`"${name}" already exists`);
+      }
+    } else {
+      this.#typeRegistry.set(name, type);
+    }
+
+    return {
+      name,
+      typeKey: type,
+    };
+  }
+
+  #get<T extends TypeKey>(lock: Lock<T>): TypeMap[T] {
+    const definition = this.#map.get(lock.name);
+
+    if (!definition) {
+      throw new Error(`"${lock.name}" is referenced but not implemented`);
+    }
+
+    return definition.type as TypeMap[T];
+  }
+
+  #set<T extends TypeKey>(lock: Lock<T>, builder: Builder): void {
+    if (this.#map.has(lock.name)) {
+      throw new Error(`"${lock.name}" already exists`);
+    }
+
+    const cache = this.#cache;
+    const name = lock.name;
+
+    const definition = {
+      get type() {
+        if (cache.has(name)) {
+          return cache.get(name)!;
+        }
+
+        const instance = builder.build();
+
+        cache.set(name, instance);
+
+        return instance;
+      },
+    };
+
+    this.#map.set(lock.name, definition);
   }
 
   inputObjectType(config: InputObjectTypeConfig): InputObjectType;
@@ -150,19 +191,16 @@ export class SchemaBuilder {
     nameOrConfig: string | InputObjectTypeConfig,
   ): InputObjectType {
     const name = normalizeName(nameOrConfig);
+    const lock = this.#getLock(name, "inputObject");
     const get = this.#get.bind(this);
 
     if (isNamed(nameOrConfig)) {
-      this.#set(name, new InputObjectTypeBuilder(nameOrConfig));
+      this.#set(lock, new InputObjectTypeBuilder(nameOrConfig));
     }
 
     return {
       get type() {
-        const type = get(name);
-
-        if (isInputObjectType(type)) return type;
-
-        throw new Error();
+        return get(lock);
       },
     };
   }
@@ -173,19 +211,16 @@ export class SchemaBuilder {
     nameOrConfig: string | UnionTypeConfig<unknown, unknown>,
   ): UnionType {
     const name = normalizeName(nameOrConfig);
+    const lock = this.#getLock(name, "union");
     const get = this.#get.bind(this);
 
     if (isNamed(nameOrConfig)) {
-      this.#set(name, new UnionTypeBuilder(nameOrConfig));
+      this.#set(lock, new UnionTypeBuilder(nameOrConfig));
     }
 
     return {
       get type() {
-        const type = get(name);
-
-        if (isUnionType(type)) return type;
-
-        throw new Error();
+        return get(lock);
       },
     };
   }
@@ -194,19 +229,16 @@ export class SchemaBuilder {
   enumType(name: string): EnumType;
   enumType(nameOrConfig: string | GraphQLEnumTypeConfig): EnumType {
     const name = normalizeName(nameOrConfig);
+    const lock = this.#getLock(name, "enum");
     const get = this.#get.bind(this);
 
     if (isNamed(nameOrConfig)) {
-      this.#set(name, new EnumTypeBuilder(nameOrConfig));
+      this.#set(lock, new EnumTypeBuilder(nameOrConfig));
     }
 
     return {
       get type() {
-        const type = get(name);
-
-        if (isEnumType(type)) return type;
-
-        throw new Error();
+        return get(lock);
       },
     };
   }
@@ -217,19 +249,16 @@ export class SchemaBuilder {
     nameOrConfig: string | InterfaceTypeConfig<unknown, unknown>,
   ): InterfaceType {
     const name = normalizeName(nameOrConfig);
+    const lock = this.#getLock(name, "interface");
     const get = this.#get.bind(this);
 
     if (isNamed(nameOrConfig)) {
-      this.#set(name, new InterfaceTypeBuilder(nameOrConfig));
+      this.#set(lock, new InterfaceTypeBuilder(nameOrConfig));
     }
 
     return {
       get type() {
-        const type = get(name);
-
-        if (isInterfaceType(type)) return type;
-
-        throw new Error();
+        return get(lock);
       },
     };
   }
