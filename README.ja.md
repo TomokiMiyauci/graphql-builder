@@ -35,7 +35,7 @@ const schema = new GraphQLSchema({ types });
 
 ### SchemaBuilderの初期化
 
-`SchemaBuilder`は初期化時に、外部のGraphQLインスタンスを取り込むことができます。
+`SchemaBuilder`は、初期化時に外部のGraphQLインスタンスを取り込むことができます。
 
 ```ts
 import { SchemaBuilder } from "@miyauci/graphql-builder";
@@ -88,7 +88,7 @@ builder.objectType({
 
 #### 遅延表現の取得
 
-名前を指定すると、遅延表現を取得します。
+ファクトリメソッドに名前を指定すると、遅延表現を取得します。
 
 ```ts
 import { SchemaBuilder } from "@miyauci/graphql-builder";
@@ -99,7 +99,7 @@ builder.objectType("Post");
 
 #### Configのバインド
 
-最終的にその遅延表現をGraphQLのインスタンスとして評価するためには、必ずConfigをバインドする必要があります。
+遅延表現をGraphQLのインスタンスとして評価するためには、必ずConfigをバインドする必要があります。
 
 ```ts
 import { SchemaBuilder } from "@miyauci/graphql-builder";
@@ -156,7 +156,7 @@ assertThrows(() => builder.inputObjectType("Post"));
 
 ##### 重複バインド
 
-同じ名前空間に対する重複バインドはできません。
+ビルダーは、同じ名前空間に対する重複バインドはできません。
 
 ```ts
 import type { ObjectTypeConfig, SchemaBuilder } from "@miyauci/graphql-builder";
@@ -170,7 +170,7 @@ assertThrows(() => builder.objectType({ ...config, name: "Post" }));
 
 ##### 未バインド
 
-評価する際に、未バインドの遅延表現はエラーになります。
+遅延表現を評価する際に、未バインドの場合にはエラーになります。
 
 ```ts
 import { SchemaBuilder } from "@miyauci/graphql-builder";
