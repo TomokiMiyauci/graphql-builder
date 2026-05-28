@@ -1,6 +1,6 @@
 # graphql-builder
 
-**参照管理**と**Thunk**のないGraphQLスキーマビルダー
+循環参照を解決する、名前ベースのGraphQLスキーマビルダー
 
 ## Install
 
@@ -12,7 +12,7 @@ deno add jsr:@miyauci/graphql-builder
 
 ## Usage
 
-`SchemaBuilder`は、`GraphQLNamedType`を構築するための中間表現（定義）を管理するクラスです。
+`SchemaBuilder`は、`GraphQLNamedType`を構築するための中間表現を管理するクラスです。
 
 ```ts
 import { SchemaBuilder } from "@miyauci/graphql-builder";
@@ -82,7 +82,7 @@ builder.objectType({
 });
 ```
 
-### 📝 遅延表現の取得とバインド
+### 遅延表現の取得とバインド
 
 各ファクトリメソッドが返すオブジェクトは、遅延表現です。
 
@@ -108,7 +108,7 @@ declare const builder: SchemaBuilder;
 builder.objectType({ name: "Post", fields: {} });
 ```
 
-#### Utility
+#### Utilities
 
 遅延表現を`GraphQLList`や`GraphQLNonNull`として表現するためのユーティリティを提供しています。
 
@@ -170,7 +170,7 @@ assertThrows(() => builder.objectType({ ...config, name: "Post" }));
 
 ##### 未バインド
 
-遅延表現を評価する際に、未バインドの場合にはエラーになります。
+遅延表現を評価する際に、Configが未バインドの場合にはエラーになります。
 
 ```ts
 import { SchemaBuilder } from "@miyauci/graphql-builder";
