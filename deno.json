@@ -10,6 +10,5 @@
     "@std/collections": "jsr:@std/collections@^1.1.7",
     "@std/testing": "jsr:@std/testing@^1.0.19",
     "graphql": "npm:graphql@^16.14.0"
-  },
-  "workspace": ["packages/*"]
+  }
 }
