@@ -1,8 +1,11 @@
 {
   "name": "@miyauci/graphql-builder",
   "tasks": {
-    "lint": "deno task lint:*",
-    "lint:js": "deno lint"
+    "lint": "deno lint",
+    "typecheck": "deno check --doc",
+    "check": {
+      "dependencies": ["lint", "typecheck"]
+    }
   },
   "exports": "./src/mod.ts",
   "imports": {

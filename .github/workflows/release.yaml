@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  lint:
+  check:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -18,11 +18,11 @@ jobs:
 
       - uses: denoland/setup-deno@v2
 
-      - name: Lint
-        run: deno task lint
+      - name: Check
+        run: deno task check
 
   release:
-    needs: [lint]
+    needs: [check]
     runs-on: ubuntu-latest
     permissions:
       contents: write
