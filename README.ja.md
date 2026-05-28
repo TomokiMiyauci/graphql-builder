@@ -108,6 +108,17 @@ declare const builder: SchemaBuilder;
 builder.objectType({ name: "Post", fields: {} });
 ```
 
+#### Utility
+
+遅延表現を`GraphQLList`や`GraphQLNonNull`として表現するためのユーティリティを提供しています。
+
+```ts
+import { list, nonNull, SchemaBuilder } from "@miyauci/graphql-builder";
+declare const builder: SchemaBuilder;
+
+list(nonNull(builder.scalarType("Ip")));
+```
+
 #### 評価
 
 GraphQLのインスタンスを得るには２つの方法があります。
