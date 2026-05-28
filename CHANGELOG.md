@@ -1,3 +1,10 @@
+# [1.0.0-beta.2](https://github.com/TomokiMiyauci/graphql-builder/compare/1.0.0-beta.1...1.0.0-beta.2) (2026-05-28)
+
+
+### Features
+
+* remove internal workspace, add utility ([bba29fe](https://github.com/TomokiMiyauci/graphql-builder/commit/bba29fe455b8486d7d4cf9341e8d9dfcaa991c78))
+
 # 1.0.0-beta.1 (2026-05-28)
 
 
