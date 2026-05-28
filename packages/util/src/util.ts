@@ -5,17 +5,18 @@ export function evolve<
   data: T,
   mapper: Mapper<T, E>,
 ): E {
-  const out: T = { ...data };
+  // deno-lint-ignore no-explicit-any
+  const out: any = { ...data };
 
   for (const [key, value] of Object.entries(mapper)) {
     if (key in out) {
       if (typeof value === "function") {
-        out[key] = value(data[key]);
+        out[key] = value(Reflect.get(data, key));
       }
     }
   }
 
-  return out as any;
+  return out;
 }
 
 export type Mapper<
