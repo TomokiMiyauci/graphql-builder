@@ -74,7 +74,7 @@ function getConstructorName(key: TypeKey): string {
       return "GraphQLObjectType";
     }
     case "scalar": {
-      return "GrpahQLScalarType";
+      return "GraphQLScalarType";
     }
     case "enum": {
       return "GraphQLEnumType";
@@ -107,9 +107,18 @@ export class SchemaBuilder {
     }
   }
 
-  scalar<T, U>(config: GraphQLScalarTypeConfig<T, U>): ScalarType<T, U>;
-  scalar(name: string): ScalarType;
-  scalar(
+  scalarType<T, U>(config: GraphQLScalarTypeConfig<T, U>): ScalarType<T, U>;
+  /**
+   * @example Basic Reference
+   * ```ts
+   * const builder = new SchemaBuilder();
+   * builder.scalarType("ref");
+   * ```
+   *
+   * @throws {Error} If the reference has already been registered with a different type.
+   */
+  scalarType(name: string): ScalarType;
+  scalarType(
     nameOrConfig: string | GraphQLScalarTypeConfig<unknown, unknown>,
   ): ScalarType {
     const name = normalizeName(nameOrConfig);
@@ -127,9 +136,21 @@ export class SchemaBuilder {
     };
   }
 
+  /**
+   * @example Create definition with config
+   * ```ts
+   * const builder = new SchemaBuilder();
+   * builder.objectType({ name: "Post", fields: { author: { type: builder.objectType("Author") } } })
+   * ```
+   *
+   * @throws {Error} If the reference has already been registered with a different type.
+   */
   objectType<T, U, A = unknown>(
     config: ObjectTypeConfig<T, U, A>,
   ): ObjectType<T, U>;
+  /**
+   * @throws {Error} If the reference has already been registered with a different type.
+   */
   objectType(name: string): ObjectType<unknown, unknown>;
   objectType(
     nameOrConfig: string | ObjectTypeConfig<unknown, unknown>,
@@ -156,6 +177,9 @@ export class SchemaBuilder {
 
   #typeRegistry: Map<string, TypeKey> = new Map();
 
+  /**
+   * @throws {Error} If the reference has already been registered with a different type.
+   */
   #getLock<T extends TypeKey>(name: string, type: T): Lock<T> {
     const typeKey = this.#typeRegistry.get(name);
 
@@ -175,6 +199,9 @@ export class SchemaBuilder {
     };
   }
 
+  /**
+   * @throws {Error} If the config does not exists
+   */
   #get<T extends TypeKey>(lock: Lock<T>): TypeMap[T] {
     const definition = this.#map.get(lock.name);
 
@@ -216,7 +243,13 @@ export class SchemaBuilder {
     this.#map.set(lock.name, definition);
   }
 
+  /**
+   * @throws {Error} If the reference has already been registered with a different type.
+   */
   inputObjectType(config: InputObjectTypeConfig): InputObjectType;
+  /**
+   * @throws {Error} If the reference has already been registered with a different type.
+   */
   inputObjectType(name: string): InputObjectType;
   inputObjectType(
     nameOrConfig: string | InputObjectTypeConfig,
@@ -236,7 +269,13 @@ export class SchemaBuilder {
     };
   }
 
+  /**
+   * @throws {Error} If the reference has already been registered with a different type.
+   */
   unionType<T, U>(config: UnionTypeConfig<T, U>): UnionType;
+  /**
+   * @throws {Error} If the reference has already been registered with a different type.
+   */
   unionType(name: string): UnionType;
   unionType(
     nameOrConfig: string | UnionTypeConfig<unknown, unknown>,
@@ -256,7 +295,13 @@ export class SchemaBuilder {
     };
   }
 
+  /**
+   * @throws {Error} If the reference has already been registered with a different type.
+   */
   enumType(config: GraphQLEnumTypeConfig): EnumType;
+  /**
+   * @throws {Error} If the reference has already been registered with a different type.
+   */
   enumType(name: string): EnumType;
   enumType(nameOrConfig: string | GraphQLEnumTypeConfig): EnumType {
     const name = normalizeName(nameOrConfig);
@@ -274,7 +319,13 @@ export class SchemaBuilder {
     };
   }
 
+  /**
+   * @throws {Error} If the reference has already been registered with a different type.
+   */
   interfaceType<T, U>(config: InterfaceTypeConfig<T, U>): InterfaceType;
+  /**
+   * @throws {Error} If the reference has already been registered with a different type.
+   */
   interfaceType(name: string): InterfaceType;
   interfaceType(
     nameOrConfig: string | InterfaceTypeConfig<unknown, unknown>,
@@ -295,7 +346,7 @@ export class SchemaBuilder {
   }
 
   types(): GraphQLNamedType[] {
-    return this.#map.values().map((builder) => builder.type).toArray();
+    return [...this.#map.values().map((definition) => definition.type)];
   }
 }
 
