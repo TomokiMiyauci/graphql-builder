@@ -1,15 +1,21 @@
 import {
-  GraphQLEnumType,
+  type GraphQLEnumType,
   type GraphQLEnumTypeConfig,
-  GraphQLInputObjectType,
-  GraphQLInterfaceType,
+  type GraphQLInputObjectType,
+  type GraphQLInterfaceType,
   GraphQLList,
   type GraphQLNamedType,
   GraphQLNonNull,
-  GraphQLObjectType,
-  GraphQLScalarType,
+  type GraphQLObjectType,
+  type GraphQLScalarType,
   type GraphQLScalarTypeConfig,
-  GraphQLUnionType,
+  type GraphQLUnionType,
+  isEnumType,
+  isInputObjectType,
+  isInterfaceType,
+  isObjectType,
+  isScalarType,
+  isUnionType,
 } from "graphql";
 import type {
   BaseNamedType,
@@ -58,12 +64,12 @@ interface Lock<T extends TypeKey> {
 }
 
 function getType(named: GraphQLNamedType): TypeKey {
-  if (named instanceof GraphQLObjectType) return "object";
-  if (named instanceof GraphQLScalarType) return "scalar";
-  if (named instanceof GraphQLEnumType) return "enum";
-  if (named instanceof GraphQLUnionType) return "union";
-  if (named instanceof GraphQLInputObjectType) return "inputObject";
-  if (named instanceof GraphQLInterfaceType) return "interface";
+  if (isObjectType(named)) return "object";
+  if (isScalarType(named)) return "scalar";
+  if (isEnumType(named)) return "enum";
+  if (isUnionType(named)) return "union";
+  if (isInputObjectType(named)) return "inputObject";
+  if (isInterfaceType(named)) return "interface";
 
   throw new Error("unreachable");
 }
@@ -346,7 +352,7 @@ export class SchemaBuilder {
   }
 
   types(): GraphQLNamedType[] {
-    return [...this.#map.values().map((definition) => definition.type)];
+    return [...this.#map.values()].map((definition) => definition.type);
   }
 }
 
