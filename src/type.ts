@@ -10,6 +10,9 @@ import type {
   GraphQLList,
   GraphQLNamedType,
   GraphQLNonNull,
+  GraphQLNullableInputType,
+  GraphQLNullableOutputType,
+  GraphQLNullableType,
   GraphQLObjectType,
   GraphQLObjectTypeConfig,
   GraphQLOutputType,
@@ -67,7 +70,7 @@ export interface InterfaceTypeConfig<TSource, TContext> {
 
 export interface FieldConfig<T, U, TArgs = unknown>
   extends Omit<GraphQLFieldConfig<T, U, TArgs>, "type" | "args"> {
-  type: OutputType<T, U> | GraphQLFieldConfig<T, U, TArgs>["type"];
+  type: OutputType | GraphQLOutputType;
   args?: FieldConfigArgumentMap;
 }
 
@@ -76,21 +79,22 @@ export interface InputFieldConfig
   type: InputType | GraphQLInputType;
 }
 
-export type OutputType<T, U> =
-  | ObjectType<T, U>
-  | ScalarType
-  | UnionType
-  | EnumType
-  | InterfaceType
-  | List<GraphQLOutputType>
-  | NonNull<GraphQLOutputType>;
+export type OutputType =
+  | NonNull<GraphQLNullableOutputType>
+  | NullableOutputType;
 
-export type InputType =
-  | InputObjectType
+export type NullableOutputType = NamedOutputType | List<GraphQLOutputType>;
+
+export type NamedOutputType =
   | ScalarType
   | EnumType
-  | List<GraphQLInputType>
-  | NonNull<GraphQLInputType>;
+  | ObjectType
+  | UnionType
+  | InterfaceType;
+
+export type InputType = NullableInputType | NonNull<GraphQLNullableInputType>;
+
+export type NullableInputType = NamedInputType | List<GraphQLInputType>;
 
 export interface UnionType extends BaseType {
   readonly type: GraphQLUnionType;
@@ -104,19 +108,19 @@ export interface List<T extends GraphQLType> extends BaseType {
   readonly type: GraphQLList<T>;
 }
 
-export interface NonNull<T extends GraphQLType> extends BaseType {
+export interface NonNull<T extends GraphQLNullableType> extends BaseType {
   readonly type: GraphQLNonNull<T>;
 }
 
-export type Type =
-  | ScalarType
-  | ObjectType
-  | InterfaceType
-  | UnionType
-  | EnumType
-  | InputObjectType
-  | List<GraphQLType>
-  | NonNull<GraphQLType>;
+export type Type = NamedType | WrappingType;
+
+export type NullableType = NamedType | List<GraphQLType>;
+
+export type NamedType = NamedInputType | NamedOutputType;
+
+export type NamedInputType = ScalarType | EnumType | InputObjectType;
+
+export type WrappingType = List<GraphQLType> | NonNull<GraphQLNullableType>;
 
 export type FieldConfigArgumentMap = Record<string, ArgumentConfig>;
 

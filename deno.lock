@@ -11,7 +11,7 @@
     "jsr:@std/path@^1.1.5": "1.1.6",
     "jsr:@std/path@^1.1.6": "1.1.6",
     "jsr:@std/testing@^1.0.19": "1.0.21",
-    "npm:graphql@16": "16.14.2"
+    "npm:graphql@17": "17.0.2"
   },
   "jsr": {
     "@std/assert@1.0.19": {
@@ -57,8 +57,8 @@
     }
   },
   "npm": {
-    "graphql@16.14.2": {
-      "integrity": "sha512-Chq1s4CY7jmh8gO2qvLIJyfCDIN+EHLFW/9iShnp1z8FjBQMoodWP1kDC36VAMXXIvAjj4ARa7ntfAV2BrjsbA=="
+    "graphql@17.0.2": {
+      "integrity": "sha512-FRWbddMxfkjiB7z+aQDWIR+E34xo9I8c9mtK2RPv8PmMzKRvrdsreHL/Ui/TmwHJfhHChEtsFPyMHKI+xuarQQ=="
     }
   },
   "workspace": {
@@ -66,7 +66,7 @@
       "jsr:@std/assert@^1.0.19",
       "jsr:@std/collections@^1.1.7",
       "jsr:@std/testing@^1.0.19",
-      "npm:graphql@16"
+      "npm:graphql@17"
     ]
   }
 }

@@ -27,6 +27,7 @@ import type {
   InterfaceTypeConfig,
   List,
   NonNull,
+  NullableType,
   ObjectType,
   ObjectTypeConfig,
   ScalarType,
@@ -376,7 +377,7 @@ export function list<T extends Type>(type: T): List<T["type"]> {
   };
 }
 
-export function nonNull<T extends Type>(type: T): NonNull<T["type"]> {
+export function nonNull<T extends NullableType>(type: T): NonNull<T["type"]> {
   return {
     get type() {
       const instance = type.type;
