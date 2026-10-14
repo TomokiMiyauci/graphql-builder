@@ -27,8 +27,8 @@ import {
   GraphQLUnionType,
   type GraphQLUnionTypeConfig,
 } from "graphql";
-import { mapValues } from "@std/collections";
-import { evolve } from "@miyauci/utils";
+import { mapValues } from "@std/collections/map-values";
+import { evolve } from "./util.ts";
 
 export class ScalarTypeBuilder<T, U> implements Builder {
   #config: GraphQLScalarTypeConfig<T, U>;
